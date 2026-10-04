@@ -20,7 +20,8 @@ Update at the start and end of every session. Keep it under one screen.
 - Human: review RBAC matrix (T-002) yourself; run probe queries (T-004.6); log both
 
 ## Waiting on / blocked
-- (none)
+- T-010 in progress in `/tmp/groundtruth-lane-b-t010`, branch `t/T-010-app-shell`; stop after reviewer verdict. Dev port: 5174.
+- T-001 scaffold is absent; Lane B is proceeding with fixtures and has requested the platform contracts in TASKS.md.
 
 ## Decisions made today
 - Plan compressed to 3 sprints (Sat/Sun/Mon); cut line fixed in docs/sprint-plan.md

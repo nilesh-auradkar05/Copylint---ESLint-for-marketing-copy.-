@@ -15,7 +15,7 @@
 | T-005 | `verify-draft` job (extract → retrieve → judge → write) | A | S1 | T-003, T-004 | 3 h | TODO |
 | T-006 | `POST /api/drafts/:id/check` route + quota | A | S1 | T-002, T-005 | 1 h | TODO |
 | T-007 | Golden-set eval runner + prompt iteration | A | S2 | T-005 | 2 h | TODO |
-| T-010 | App shell, landing, drafts list/new, design tokens | B | S1 | T-001 | 2.5 h | TODO |
+| T-010 | App shell, landing, drafts list/new, design tokens | B | S1 | T-001 | 2.5 h | IN_PROGRESS (B/orchestrator) |
 | T-011 | Review room (fixtures first, then live data) | B | S1→S2 | T-003 (contracts), T-010 | 3.5 h | TODO |
 | T-012 | Sign-off UI + derived badge | B | S2 | T-011, T-002 | 1.5 h | TODO |
 | T-013 | Accept fix → new version → re-check | B | S2 | T-011, T-006 | 1 h | TODO |
@@ -216,6 +216,7 @@
 
 ## Contract change requests
 <!-- CONTRACT-CHANGE: <requester lane> <file> <what/why> — orchestrator A decides -->
+- CONTRACT-CHANGE: B / T-010 — T-001 scaffold is absent (no package.json, src, SDK types, or runtime); provide the official scaffold, authenticated (app) provider boundary, draft schema, and mutation-ready records contract. Continue UI work with fixtures; live auth, persistence, and port-5174 runtime verification remain blocked until these exist.
 
 ## Test disputes
 <!-- TEST-DISPUTE: <task> <test> <reason> — decision: ... -->
