@@ -1,0 +1,97 @@
+/* Paper, ink, and editorial marks. Verdict words always accompany the color. */
+[data-theme="proof-desk"] {
+  color-scheme: light;
+  --color-background: #FBFAF7;
+  --color-foreground: #1B1B1F;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1B1B1F;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1B1B1F;
+  --color-primary: #1B1B1F;
+  --color-primary-foreground: #FBFAF7;
+  --color-secondary: #ECEAE4;
+  --color-secondary-foreground: #1B1B1F;
+  --color-muted: #ECEAE4;
+  --color-muted-foreground: #57575B;
+  --color-accent: #E5E2D9;
+  --color-accent-foreground: #1B1B1F;
+  --color-border: #D5D2C9;
+  --color-input: #98958D;
+  --color-ring: #1B1B1F;
+  --color-destructive: #C92A2A;
+  --color-destructive-foreground: #FFFFFF;
+  --color-verdict-supported: #2F9E44;
+  --color-verdict-supported-foreground: #000000;
+  --color-verdict-contradicted: #C92A2A;
+  --color-verdict-contradicted-foreground: #FFFFFF;
+  --color-verdict-unsupported: #E8590C;
+  --color-verdict-unsupported-foreground: #000000;
+  --radius: 0.25rem;
+}
+[data-theme="proof-desk-dark"] {
+  color-scheme: dark;
+  --color-background: #19191D;
+  --color-foreground: #F4F0E8;
+  --color-card: #222226;
+  --color-card-foreground: #F4F0E8;
+  --color-popover: #222226;
+  --color-popover-foreground: #F4F0E8;
+  --color-primary: #F4F0E8;
+  --color-primary-foreground: #19191D;
+  --color-secondary: #303035;
+  --color-secondary-foreground: #F4F0E8;
+  --color-muted: #303035;
+  --color-muted-foreground: #BDB9B1;
+  --color-accent: #38383D;
+  --color-accent-foreground: #F4F0E8;
+  --color-border: #45454A;
+  --color-input: #83838A;
+  --color-ring: #F4F0E8;
+  --color-destructive: #C92A2A;
+  --color-destructive-foreground: #FFFFFF;
+  --color-verdict-supported: #2F9E44;
+  --color-verdict-supported-foreground: #000000;
+  --color-verdict-contradicted: #C92A2A;
+  --color-verdict-contradicted-foreground: #FFFFFF;
+  --color-verdict-unsupported: #E8590C;
+  --color-verdict-unsupported-foreground: #000000;
+  --radius: 0.25rem;
+}
+.proof-landing, .proof-page { max-width: 1160px; margin: auto; padding: 2rem clamp(1.25rem, 4vw, 3rem); }
+.proof-page { max-width: 900px; }
+.proof-landing h1, .proof-page h1, .proof-landing h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; line-height: 1.1; letter-spacing: -0.025em; }
+.proof-landing h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); margin: 1rem 0 1.5rem; }
+.proof-page h1 { font-size: 2.5rem; margin: 0.5rem 0 1rem; }
+.proof-landing h2 { font-size: 1.7rem; margin: 0.8rem 0 1.5rem; }
+.proof-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.proof-wordmark { font-weight: 650; font-size: 1.2rem; }
+.proof-wordmark span, .proof-muted { color: var(--color-muted-foreground); }
+.proof-kicker, .proof-count { font-family: ui-monospace, monospace; font-size: 0.75rem; }
+.proof-kicker { text-transform: uppercase; letter-spacing: 0.09em; }
+.proof-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; padding: 5rem 0; }
+.proof-intro { font-size: 1.05rem; line-height: 1.7; max-width: 31rem; }
+.proof-cta { display: inline-block; background: var(--color-primary); color: var(--color-primary-foreground); padding: 0.85rem 1.25rem; margin: 1.8rem 0 0.8rem; border-radius: var(--radius); }
+.proof-sheet { background: var(--color-card); border: 1px solid var(--color-border); padding: 2rem; }
+.proof-markup { border-top: 1px solid var(--color-border); padding: 1rem 0; }
+.proof-markup blockquote { font-family: ui-monospace, monospace; line-height: 1.8; margin: 0.5rem 0 1rem; }
+.proof-markup del { text-decoration-thickness: 2px; }
+.proof-source { font-family: ui-monospace, monospace; font-size: 0.75rem; text-decoration: underline; }
+.proof-verdict { border-radius: var(--radius); }
+.proof-supported { background: var(--color-verdict-supported); color: var(--color-verdict-supported-foreground); }
+.proof-contradicted { background: var(--color-verdict-contradicted); color: var(--color-verdict-contradicted-foreground); }
+.proof-unsupported { background: var(--color-verdict-unsupported); color: var(--color-verdict-unsupported-foreground); }
+.proof-note { border-top: 1px solid var(--color-border); padding: 2rem 0 3rem; max-width: 48rem; }
+.proof-note p { margin-bottom: 1rem; }
+.proof-form { display: grid; gap: 1.25rem; margin-top: 2rem; }
+.proof-form label { display: block; margin-bottom: 0.5rem; }
+.proof-count { text-align: right; margin-top: 0.5rem; color: var(--color-muted-foreground); }
+.proof-error { color: var(--color-foreground); border-left: 2px solid var(--color-destructive); padding-left: 0.65rem; margin-top: 0.5rem; }
+.proof-error:empty { display: none; }
+.proof-empty { border: 1px solid var(--color-border); text-align: center; padding-bottom: 2rem; margin-top: 2rem; }
+.proof-list { padding: 0; margin-top: 2rem; list-style: none; }
+.proof-list li { padding: 1.25rem 0; border-top: 1px solid var(--color-border); }
+.proof-draft-title { font-family: Georgia, serif; font-size: 1.5rem; }
+.proof-link, .proof-draft-title { text-underline-offset: 4px; }
+.proof-landing a:hover, .proof-page a:hover { text-decoration: underline; }
+.proof-landing a:focus-visible, .proof-page a:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 4px; }
+@media (max-width: 720px) { .proof-hero { grid-template-columns: 1fr; padding: 3rem 0; gap: 2rem; } .proof-sheet { padding: 1.25rem; } .proof-wordmark span { display: none; } }

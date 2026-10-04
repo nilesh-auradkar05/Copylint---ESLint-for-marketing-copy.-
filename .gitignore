@@ -218,3 +218,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# DeepSpace app artifacts
+node_modules
+dist
+.wrangler
+.wrangler.deepspace.*.toml
+.dev.vars
+.dev.vars.*
+.deepspace
+.worker-bundle.js
+*.tgz
+test-results/
+playwright-report/
+src/router.ts
+src/modals.tsx
+.claude/launch.json
+.claude/worktrees

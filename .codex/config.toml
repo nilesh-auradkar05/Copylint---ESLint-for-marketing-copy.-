@@ -1,0 +1,9 @@
+# Project-scoped Codex config for Groundtruth (Lane B orchestrator).
+# Requires a trusted project so project config is applied.
+model = "gpt-6-astra"
+model_reasoning_effort = "high"
+
+[agents]
+max_concurrent_threads_per_session = 4
+default_subagent_model = "gpt-6.1-sol"
+default_subagent_reasoning_effort = "high"

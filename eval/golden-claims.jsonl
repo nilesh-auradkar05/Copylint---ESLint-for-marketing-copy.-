@@ -1,0 +1,28 @@
+{"id":1,"claim":"DeepSpace apps run on Cloudflare Workers.","label":"supported","page":"index","note":"SDK for real-time apps on Cloudflare Workers"}
+{"id":2,"claim":"DeepSpace deploys apps to Vercel.","label":"contradicted","page":"index","note":"deploys to <app>.app.space or a custom domain"}
+{"id":3,"claim":"npx deepspace deploy ships an app to <name>.app.space.","label":"supported","page":"index","note":"deploy command target"}
+{"id":4,"claim":"The integration proxy fronts more than 215 third-party API endpoints.","label":"supported","page":"guides/external-apis","note":"215+ endpoints via one signed proxy"}
+{"id":5,"claim":"You don't need to store third-party API keys to call DeepSpace integrations.","label":"supported","page":"guides/external-apis","note":"no API keys stored by the developer"}
+{"id":6,"claim":"Developer-billed integrations reject anonymous callers by default.","label":"contradicted","page":"guides/external-apis","note":"api-worker accepts anonymous callers for developer billing; developer must auth-gate"}
+{"id":7,"claim":"The platform rate-limits every integration call for you.","label":"contradicted","page":"guides/external-apis","note":"only restricted integrations (google/*) are rate-limited"}
+{"id":8,"claim":"Google Workspace integrations require per-user OAuth and are billed to the user.","label":"supported","page":"guides/external-apis","note":"google/* per-user OAuth, always user-billed"}
+{"id":9,"claim":"Permissions are enforced server-side in the Durable Object before records are sent to clients.","label":"supported","page":"concepts/permissions","note":"DO checks reads/writes before broadcast"}
+{"id":10,"claim":"Unauthenticated users get a built-in role called 'anonymous'.","label":"contradicted","page":"concepts/permissions","note":"unauthenticated callers use the '*' key; no anonymous role identifier"}
+{"id":11,"claim":"New authenticated users get the member role by default.","label":"supported","page":"concepts/permissions","note":"member is default for authenticated users"}
+{"id":12,"claim":"Clients can watch, cancel and retry background jobs with the useJobs hook.","label":"supported","page":"guides/background-jobs","note":"useJobs returns jobs, enqueue, cancel, retry"}
+{"id":13,"claim":"Background jobs retry three times by default.","label":"contradicted","page":"guides/background-jobs","note":"default maxAttempts is 1 (no retry)"}
+{"id":14,"claim":"A background job run is limited to 15 minutes unless its type is listed in backgroundJobTypes.","label":"supported","page":"guides/background-jobs","note":"alarm wall-time 15 min; backgroundJobTypes for longer"}
+{"id":15,"claim":"ctx.waitUntil is the recommended way to run long AI generations in DeepSpace.","label":"contradicted","page":"guides/background-jobs","note":"use JobRoom instead; waitUntil killed 30s after response"}
+{"id":16,"claim":"Each DeepSpace app can provision one managed AI Search knowledge base.","label":"supported","page":"bindings/knowledge","note":"one managed instance per app, one ai_search binding"}
+{"id":17,"claim":"Knowledge search accepts queries of up to 32,000 characters.","label":"contradicted","page":"bindings/knowledge","note":"max 4,096 characters"}
+{"id":18,"claim":"Hybrid knowledge search costs $0.825 per 1,000 queries.","label":"supported","page":"bindings/knowledge","note":"pricing table incl. 10% markup"}
+{"id":19,"claim":"Scheduled tasks can use a 5-field cron expression evaluated in an IANA timezone.","label":"supported","page":"guides/scheduled-jobs","note":"schedule + timezone"}
+{"id":20,"claim":"Only admins can trigger owner-billed scheduled tasks by default.","label":"contradicted","page":"guides/scheduled-jobs","note":"members and admins can fire them by default"}
+{"id":21,"claim":"Calling createDeepSpaceAI without an authToken bills the app owner.","label":"supported","page":"sdk-reference/worker/ai","note":"falls back to APP_OWNER_JWT"}
+{"id":22,"claim":"Anthropic models created with createDeepSpaceAI default to 4,096 max output tokens.","label":"contradicted","page":"sdk-reference/worker/ai","note":"default maxOutputTokens is 64,000"}
+{"id":23,"claim":"You can enforce one vote per user per poll with a uniqueOn constraint.","label":"supported","page":"concepts/permissions","note":"uniqueOn composite constraint checked in the DO"}
+{"id":24,"claim":"DeepSpace apps scale to millions of concurrent users out of the box.","label":"unsupported","page":null,"note":"not stated in corpus"}
+{"id":25,"claim":"DeepSpace offers a 99.99% uptime SLA.","label":"unsupported","page":null,"note":"not stated in corpus"}
+{"id":26,"claim":"DeepSpace is cheaper than Firebase for most apps.","label":"unsupported","page":null,"note":"comparison not in corpus (ADR-0001)"}
+{"id":27,"claim":"DeepSpace apps are served from over 300 edge locations.","label":"unsupported","page":null,"note":"may be true of Cloudflare, but not stated in the DeepSpace corpus"}
+{"id":28,"claim":"DeepSpace includes Stripe-based subscriptions and one-time payments.","label":"supported","page":"index","note":"SaaS with billing via Stripe Checkout"}
