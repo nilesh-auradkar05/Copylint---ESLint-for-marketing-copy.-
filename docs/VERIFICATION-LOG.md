@@ -20,3 +20,6 @@ YYYY-MM-DD HH:MM ET | T-ID | [agent: <harness/role>] produced … | [human|orche
 ```
 
 ---
+
+2026-10-04 17:48 ET | T-003 | [agent: claude/test-author] wrote 144 engine tests + eval/fixtures/review-room.json; [agent: claude/implementer] wrote src/engine/{config,contracts,ids,spans,gate,citations}.ts; [agent: claude/reviewer] APPROVE, 2 SHOULD (shipReady trusts caller to scope claims to the version; locateQuote can return one span for two near-duplicate quotes) | [orchestrator] ran type-check, lint, vitest on merged main (415/415); confirmed implementer touched no test or fixture | pass; `npx deepspace test run` not run
+2026-10-04 17:48 ET | T-002 | [agent: claude/test-author] wrote 271 schema tests through the SDK's canRead/canCreate/canUpdate/canDelete/checkFieldPermissions/lintSchemas, and 21 Playwright stubs (test.fixme); [agent: claude/implementer] wrote 7 schemas + hardening (member writableFields on drafts, immutable signoff claimId/versionId); [agent: claude/reviewer] APPROVE on the pre-hardening diff | [orchestrator] ran type-check, lint, vitest on merged main (415/415) | schema-level pass; NOT verified live: no RBAC run against a worker, no admin test user, hardening commits not re-reviewed

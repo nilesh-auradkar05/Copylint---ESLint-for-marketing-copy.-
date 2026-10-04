@@ -288,13 +288,35 @@ A version with zero claims that is `checked` is ship-ready.
 | `CronTask {name, schedule, timezone}`, `runTask`, `buildCronContext`, `useCronMonitor` | V | guides/scheduled-jobs |
 | `createDeepSpaceAI(env, 'anthropic', {authToken?})` owner-pays without token; Anthropic default `maxOutputTokens` 64,000 | V | sdk-reference/worker/ai |
 | Permission levels, `uniqueOn`, `userBound`, `immutable`, `ownerField`, `collaboratorsField` | V | concepts/permissions |
-| Integer column storage type name | CHECK | sdk-reference/worker/schemas |
-| Knowledge search result shape (item key / filename / text fields) | CHECK | `.d.ts` |
-| Records API from inside a job handler | CHECK | `.d.ts`, rooms reference |
-| `job.attempts` / `maxAttempts` field names | CHECK | rooms reference |
-| Server action invocation from client | CHECK | guides/server-actions |
-| Model id strings available | CHECK | AI chat guide / `listDeepSpaceAgentModels` |
-| Structured output API in installed `ai` package | CHECK | `node_modules/ai` |
+| Integer column storage type name | **V** — `storage: 'number'` (`ColumnDefinition.storage` is `'number' \| 'text'` only; there is no `integer`). No text fallback needed. | `schema.d.ts`, sdk-reference/worker/schemas |
+| Knowledge search result shape | **V** — `{ chunks: Array<{ id, score, text, key?, filename?, folder?, timestamp? }>, queryKind? }`. `filename` and `key` are optional, so `retrieve.ts` must tolerate a missing filename (drop the chunk). Options: `{ folder?, mode?, limit?, matchThreshold?, queryRewrite? }`. | `worker.d.ts` `KnowledgeSearchChunk` |
+| Records API from inside a job handler | **V, with correction** — JobRoom exposes no records helper. `buildCronContext(env, ownerUserId, roomId)` works (RBAC bypassed) but `records` is only `query({where,limit}) / create(collection, data) / update / delete`: **no `get`, no `recordId` on create**. Deterministic ids (`versionId`, `kb_state` `global`) need the `ActionTools` shape `create(collection, data, recordId?)` + `get`, i.e. the scaffold's `createActionTools` in `src/server/action-routes.ts` (same `X-App-Action` tools endpoint). | `worker.d.ts` `CronContext`, `ActionTools`; scaffold `action-routes.ts` |
+| `job.attempts` / `maxAttempts` field names | **V** — `Job.attempts: number`, `Job.maxAttempts: number`. `attempts` is incremented **before** `onJob` runs, so last attempt ⇔ `job.attempts >= job.maxAttempts`. | `worker.d.ts` `Job`; `worker.js` `executeJob` |
+| Server action invocation from client | **V** — `POST /api/actions/<name>`, JSON body = params, header `Authorization: Bearer ${await getAuthToken()}` (`getAuthToken` from `deepspace`). A cookie-only call gets 401. Response is `ActionResult`: `{ success, data?, error? }`. | guides/server-actions; scaffold `action-routes.ts` |
+| Model id strings available | **V** — `claude-haiku-4-5` (fast) and `claude-sonnet-5` (balanced) are both in `DEEPSPACE_AI_MODELS`. | `worker.d.ts` |
+| Structured output API in installed `ai` package | **V** — `ai@7.0.107` (pinned by the scaffold). `generateObject` still exists but is `@deprecated`; use `generateText({ model, system, prompt, output: Output.object({ schema }), maxOutputTokens, abortSignal })`. | `node_modules/ai/dist/index.d.ts` |
+
+**Verified 2026-10-04 against `deepspace@0.35.0` / `create-deepspace@0.35.0`** (read from a scratch install, because the repo
+has no scaffold yet; re-confirm the version once T-001 lands). Corrections to earlier sections, not yet applied there:
+
+1. **Room id.** The scaffold scopes every room as `` `app:${env.DEEPSPACE_APP_ID}` ``. `buildCronContext` defaults `roomId` to `'default'`,
+   so it must be passed explicitly. Read "`SCOPE`" in §5/§7 as that string.
+2. **§5 record access.** `buildCronContext(...).records` cannot create a row with a chosen id and has no `get` (row above).
+   Use the `ActionTools` shape from job, cron, and route code.
+3. **§3 `sources.indexStatus`.** The SDK's `KnowledgeStatus` is `queued | running | completed | error | skipped | outdated`.
+   SPEC's `indexing` is our own label; `sync.ts` must map `running → indexing` and decide what `skipped` / `outdated` mean.
+4. **§3 unauthenticated role.** A signed-out socket is attached with role `viewer` (`ROLE_ANONYMOUS = 'viewer'` in `worker.js`),
+   not `'*'`. `'*'` is only the fallback for a role with no entry (the permissions doc's wording is misleading here). SPEC §3 never
+   mentions `viewer`: every new collection must leave `viewer` out or make it all-false, with `'*'` all-false.
+5. **§3 `uniqueOn` refusal.** A duplicate returns `{ success:false, error: 'Duplicate: a record with … already exists in <collection>' }`.
+   There is no error code, so §5 step 3 must match on the message prefix.
+6. **§3 nullable text.** There is no nullable flag. On a `text` column `''` is a stored value; `fix` / `carriedFrom` "nullable" means
+   "not `required`", and readers must treat missing and `''` alike.
+7. **§3 lint.** `lintSchema(schema)` is exported from `deepspace/worker` and returns warning strings, so T-002.1 can be a unit test.
+8. **Tests.** The `users()` fixture signs in password test accounts, which are `member`. The owner is OAuth-only. There is no
+   documented way to get an **admin** test user; T-002.5 and T-004.5 need a human decision before their tests can run.
+9. **Knowledge binding.** `knowledge(env)` needs `DEEPSPACE_APP_ID` and `APP_IDENTITY_TOKEN`; the token is "absent until the app's
+   first deploy injects it", so knowledge calls may not work under `dev start` before T-001's deploy.
 
 ## 12. Prompts (`engine/prompts.ts`, versioned as `PROMPT_VERSION = 'p1'`)
 

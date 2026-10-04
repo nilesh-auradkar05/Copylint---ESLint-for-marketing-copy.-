@@ -180,7 +180,9 @@ Rules of the loop:
 
 **Worktrees:**
 ```bash
-git worktree add ../gt-lane-a main   # Claude Code
-git worktree add ../gt-lane-b main   # Codex
+git worktree add -b lane-a ../gt-lane-a main   # Claude Code (a branch can't be checked out in two worktrees)
+git worktree add -b lane-b ../gt-lane-b main   # Codex
+(cd ../gt-lane-a && npm install) && (cd ../gt-lane-b && npm install)
 # each task: git switch -c t/<ID>-<slug> inside the lane's worktree
+# DEPLOY ONLY from the primary checkout on a clean, pushed main (GitHub-source deploys ship the working tree as-is)
 ```

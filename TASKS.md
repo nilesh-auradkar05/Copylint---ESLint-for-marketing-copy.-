@@ -8,9 +8,9 @@
 
 | ID | Title | Lane | Sprint | Deps | Timebox | Status |
 |---|---|---|---|---|---|---|
-| T-001 | Repo, scaffold, GitHub source, first deploy | Human + A | S0 | – | 1.5 h | IN_PROGRESS (A: scaffold on main; Human: GitHub remote, login, app init, deploy) |
-| T-002 | Schemas + RBAC (7 collections) | A | S1 | T-001 | 1.5 h | IN_PROGRESS (A/test-author) |
-| T-003 | Engine contracts: ids, spans, gate, citations | A | S1 | T-001 | 1.5 h | IN_PROGRESS (A/test-author) |
+| T-001 | Repo, scaffold, GitHub source, first deploy | Human + A | S0 | – | 1.5 h | IN_PROGRESS (scaffold, GitHub remote, login, app id done; first deploy + `app source` check pending) |
+| T-002 | Schemas + RBAC (7 collections) | A | S1 | T-001 | 1.5 h | REVIEW (merged; reviewer APPROVE; live RBAC matrix not yet run) |
+| T-003 | Engine contracts: ids, spans, gate, citations | A | S1 | T-001 | 1.5 h | DONE |
 | T-004 | Knowledge binding + `sync-sources` job + probes | A | S1 | T-002 | 2 h | TODO |
 | T-005 | `verify-draft` job (extract → retrieve → judge → write) | A | S1 | T-003, T-004 | 3 h | TODO |
 | T-006 | `POST /api/drafts/:id/check` route + quota | A | S1 | T-002, T-005 | 1 h | TODO |
@@ -173,6 +173,7 @@
 - T-016.1 The publish modal calls `publishDraft` and shows the server's refusal reason when blocked.
 - T-016.2 `/publications` lists live and stale; stale rows show changed pages and link to the draft.
 - T-016.3 `/admin/sources`: admin-only route; table, *Sync now* (calls `/api/admin/sync`), cron row with *Run now* via `useCronMonitor`; non-admins get a polite 403 page.
+- T-016.4 `/admin/users`: admin-only list from `useUsers()` with a *Make engineer* (`setRole(userId,'admin')`) control. Without this, nobody but the owner can be an engineer.
 
 ## T-020 · Drift · Lane A
 **Spec:** §8. **ADR:** 0007.
