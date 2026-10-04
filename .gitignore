@@ -235,3 +235,10 @@ src/router.ts
 src/modals.tsx
 .claude/launch.json
 .claude/worktrees
+
+# DeepSpace app (appended; the template rule `lib/` above must not hide src/lib)
+!src/lib/
+.playwright-mcp
+AGENTS.deepspace.md
+CLAUDE.deepspace.md
+copylint/
