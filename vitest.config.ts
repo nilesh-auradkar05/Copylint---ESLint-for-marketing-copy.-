@@ -26,8 +26,8 @@ export default defineConfig({
     },
   },
   test: {
-    // Unit tests only; tests/*.spec.ts are Playwright suites run separately.
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Unit/UI tests only; tests/*.spec.ts are Playwright suites run separately.
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/*.test.tsx'],
     environment: 'node',
   },
 })

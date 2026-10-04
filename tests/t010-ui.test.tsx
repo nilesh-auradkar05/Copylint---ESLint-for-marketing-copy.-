@@ -1,4 +1,5 @@
-// Fixture-only UI contracts; live auth/persistence waits for the T-001 scaffold.
+// @vitest-environment jsdom
+// Fixture UI contracts; live member persistence requires the T-002 draft schema.
 import React, { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { existsSync, readFileSync } from 'node:fs'
