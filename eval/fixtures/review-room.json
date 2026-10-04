@@ -1,0 +1,239 @@
+{
+  "_comment": "Lane B fixture for the review room (T-003). Record-envelope shape; fields under data follow SPEC section 3. Generated once; keep claim spans in sync with version bodies (src/engine/gate.test.ts checks this).",
+  "draft": {
+    "recordId": "draft_launch_thread",
+    "data": {
+      "title": "DeepSpace launch thread",
+      "channel": "thread",
+      "body": "# DeepSpace launch thread (draft)\n\n1/ Shipping a real-time app used to mean stitching together auth, a database, websockets and a deploy pipeline. DeepSpace gives you all of it in one SDK.\n\n2/ Need third-party data? DeepSpace fronts 215+ APIs through one proxy, with zero API keys to manage.\n\n3/ When you're ready, deploy to your own app.space address in one command.\n\n4/ Worried about costs? Paid APIs are auth-gated for you, so anonymous visitors can't run up your bill.\n\n5/ Permissions are enforced server-side, before data ever reaches the client.\n\n6/ And it scales to millions of users out of the box. Try it today.",
+      "collaborators": [],
+      "latestVersionId": "7a4b82662e69ceca1a9e8aa40c535c07"
+    },
+    "createdBy": "user_writer_1",
+    "createdAt": "2026-10-03T14:00:00.000Z",
+    "updatedAt": "2026-10-04T09:00:00.000Z"
+  },
+  "versions": [
+    {
+      "recordId": "86134dff3b4b010711bfc05a32edc20c",
+      "data": {
+        "draftId": "draft_launch_thread",
+        "body": "# DeepSpace launch thread (draft)\n\n1/ Shipping a real-time app used to mean stitching together auth, a database, websockets and a deploy pipeline. DeepSpace gives you all of it in one SDK.\n\n2/ Need third-party data? DeepSpace fronts 215+ APIs through one proxy, with zero API keys to manage.\n\n3/ When you're ready, deploy to Vercel in one command.\n\n4/ Worried about costs? Paid APIs are auth-gated for you, so anonymous visitors can't run up your bill.\n\n5/ Permissions are enforced server-side, before data ever reaches the client.\n\n6/ And it scales to millions of users out of the box. Try it today.",
+        "bodyHash": "b815655054e0be570deea777834a0480",
+        "kbVersion": 1,
+        "status": "checked",
+        "requestedBy": "user_writer_1",
+        "requestedAt": "2026-10-03T14:00:00.000Z",
+        "mode": "full",
+        "jobId": "job_v1"
+      },
+      "createdBy": "system",
+      "createdAt": "2026-10-03T14:00:00.000Z",
+      "updatedAt": "2026-10-03T14:02:10.000Z"
+    },
+    {
+      "recordId": "7a4b82662e69ceca1a9e8aa40c535c07",
+      "data": {
+        "draftId": "draft_launch_thread",
+        "body": "# DeepSpace launch thread (draft)\n\n1/ Shipping a real-time app used to mean stitching together auth, a database, websockets and a deploy pipeline. DeepSpace gives you all of it in one SDK.\n\n2/ Need third-party data? DeepSpace fronts 215+ APIs through one proxy, with zero API keys to manage.\n\n3/ When you're ready, deploy to your own app.space address in one command.\n\n4/ Worried about costs? Paid APIs are auth-gated for you, so anonymous visitors can't run up your bill.\n\n5/ Permissions are enforced server-side, before data ever reaches the client.\n\n6/ And it scales to millions of users out of the box. Try it today.",
+        "bodyHash": "688d7b9b99ee64841d72873e33e301d7",
+        "kbVersion": 1,
+        "status": "checked",
+        "requestedBy": "user_writer_1",
+        "requestedAt": "2026-10-04T09:00:00.000Z",
+        "mode": "full",
+        "jobId": "job_v2"
+      },
+      "createdBy": "system",
+      "createdAt": "2026-10-04T09:00:00.000Z",
+      "updatedAt": "2026-10-04T09:01:30.000Z"
+    }
+  ],
+  "claims": [
+    {
+      "recordId": "claim_v1_vercel",
+      "data": {
+        "versionId": "86134dff3b4b010711bfc05a32edc20c",
+        "draftId": "draft_launch_thread",
+        "claimHash": "dbdcc07751eb7fe5be292818",
+        "text": "DeepSpace deploys apps to Vercel.",
+        "quote": "deploy to Vercel in one command",
+        "span": [
+          315,
+          346
+        ],
+        "kind": "deployment",
+        "verdict": "contradicted",
+        "confidence": "high",
+        "evidence": [
+          {
+            "chunkId": "c0",
+            "page": "index",
+            "excerpt": "Deploy with `npx deepspace deploy` and your app goes live at <name>.app.space, or on a custom domain."
+          }
+        ],
+        "reason": "The docs describe deploying to <name>.app.space or a custom domain, not to Vercel.",
+        "fix": "deploy to your own app.space address in one command",
+        "carriedFrom": ""
+      },
+      "createdBy": "system",
+      "createdAt": "2026-10-03T14:02:10.000Z",
+      "updatedAt": "2026-10-03T14:02:10.000Z"
+    },
+    {
+      "recordId": "claim_v1_scale",
+      "data": {
+        "versionId": "86134dff3b4b010711bfc05a32edc20c",
+        "draftId": "draft_launch_thread",
+        "claimHash": "1c8c51dea3f1a0393def4bd3",
+        "text": "DeepSpace apps scale to millions of users out of the box.",
+        "quote": "scales to millions of users out of the box",
+        "span": [
+          543,
+          585
+        ],
+        "kind": "limit",
+        "verdict": "unsupported",
+        "confidence": "low",
+        "evidence": [],
+        "reason": "The retrieved docs state no user-scale figure.",
+        "fix": "",
+        "carriedFrom": ""
+      },
+      "createdBy": "system",
+      "createdAt": "2026-10-03T14:02:10.000Z",
+      "updatedAt": "2026-10-03T14:02:10.000Z"
+    },
+    {
+      "recordId": "claim_v2_proxy",
+      "data": {
+        "versionId": "7a4b82662e69ceca1a9e8aa40c535c07",
+        "draftId": "draft_launch_thread",
+        "claimHash": "1ee2ee3104f2fd2f8e891407",
+        "text": "DeepSpace fronts 215+ APIs through one proxy with no API keys to manage.",
+        "quote": "DeepSpace fronts 215+ APIs through one proxy, with zero API keys to manage",
+        "span": [
+          216,
+          290
+        ],
+        "kind": "capability",
+        "verdict": "supported",
+        "confidence": "high",
+        "evidence": [
+          {
+            "chunkId": "c0",
+            "page": "guides/external-apis",
+            "excerpt": "215+ endpoints are available through one signed proxy; you do not store third-party API keys."
+          }
+        ],
+        "reason": "The external APIs guide states the 215+ endpoint count and that no keys are stored by the developer.",
+        "fix": "",
+        "carriedFrom": ""
+      },
+      "createdBy": "system",
+      "createdAt": "2026-10-04T09:01:30.000Z",
+      "updatedAt": "2026-10-04T09:01:30.000Z"
+    },
+    {
+      "recordId": "claim_v2_auth",
+      "data": {
+        "versionId": "7a4b82662e69ceca1a9e8aa40c535c07",
+        "draftId": "draft_launch_thread",
+        "claimHash": "ec184ac81437870069e7703c",
+        "text": "DeepSpace automatically auth-gates paid APIs so anonymous visitors cannot run up the bill.",
+        "quote": "Paid APIs are auth-gated for you, so anonymous visitors can't run up your bill",
+        "span": [
+          393,
+          471
+        ],
+        "kind": "security",
+        "verdict": "contradicted",
+        "confidence": "high",
+        "evidence": [
+          {
+            "chunkId": "c1",
+            "page": "guides/external-apis",
+            "excerpt": "Developer-billed integrations accept anonymous callers; the developer must auth-gate the routes that call them."
+          }
+        ],
+        "reason": "The docs say the developer must auth-gate developer-billed calls; it is not automatic.",
+        "fix": "Paid APIs bill your app, so gate those routes behind sign-in.",
+        "carriedFrom": ""
+      },
+      "createdBy": "system",
+      "createdAt": "2026-10-04T09:01:30.000Z",
+      "updatedAt": "2026-10-04T09:01:30.000Z"
+    },
+    {
+      "recordId": "claim_v2_scale",
+      "data": {
+        "versionId": "7a4b82662e69ceca1a9e8aa40c535c07",
+        "draftId": "draft_launch_thread",
+        "claimHash": "1c8c51dea3f1a0393def4bd3",
+        "text": "DeepSpace apps scale to millions of users out of the box.",
+        "quote": "scales to millions of users out of the box",
+        "span": [
+          563,
+          605
+        ],
+        "kind": "limit",
+        "verdict": "unsupported",
+        "confidence": "low",
+        "evidence": [],
+        "reason": "The retrieved docs state no user-scale figure.",
+        "fix": "",
+        "carriedFrom": ""
+      },
+      "createdBy": "system",
+      "createdAt": "2026-10-04T09:01:30.000Z",
+      "updatedAt": "2026-10-04T09:01:30.000Z"
+    }
+  ],
+  "signoffs": [
+    {
+      "recordId": "signoff_v2_auth_cut",
+      "data": {
+        "claimId": "claim_v2_auth",
+        "versionId": "7a4b82662e69ceca1a9e8aa40c535c07",
+        "reviewerId": "user_admin_1",
+        "decision": "cut",
+        "note": "Remove this claim; the writer must rewrite it."
+      },
+      "createdBy": "user_admin_1",
+      "createdAt": "2026-10-04T09:20:00.000Z",
+      "updatedAt": "2026-10-04T09:20:00.000Z"
+    },
+    {
+      "recordId": "signoff_v2_scale_approve",
+      "data": {
+        "claimId": "claim_v2_scale",
+        "versionId": "7a4b82662e69ceca1a9e8aa40c535c07",
+        "reviewerId": "user_admin_1",
+        "decision": "approve",
+        "note": "Acceptable marketing framing; I vouch for this wording."
+      },
+      "createdBy": "user_admin_1",
+      "createdAt": "2026-10-04T09:20:00.000Z",
+      "updatedAt": "2026-10-04T09:20:00.000Z"
+    }
+  ],
+  "kbState": {
+    "recordId": "global",
+    "data": {
+      "version": 1,
+      "lastSyncAt": "2026-10-03T14:00:00.000Z",
+      "lastChangedPages": []
+    },
+    "createdBy": "system",
+    "createdAt": "2026-10-03T14:00:00.000Z",
+    "updatedAt": "2026-10-03T14:00:00.000Z"
+  },
+  "expected": {
+    "latestVersionId": "7a4b82662e69ceca1a9e8aa40c535c07",
+    "currentKbVersion": 1,
+    "shipReadyLatest": false,
+    "blockingClaimIdsLatest": [
+      "claim_v2_auth"
+    ]
+  }
+}
