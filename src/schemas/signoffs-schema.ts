@@ -8,8 +8,8 @@ import type { CollectionSchema } from 'deepspace/schema'
 export const signoffsSchema: CollectionSchema = {
   name: 'signoffs',
   columns: [
-    { name: 'claimId', storage: 'text', interpretation: 'plain' },
-    { name: 'versionId', storage: 'text', interpretation: 'plain' },
+    { name: 'claimId', storage: 'text', interpretation: 'plain', immutable: true },
+    { name: 'versionId', storage: 'text', interpretation: 'plain', immutable: true },
     {
       name: 'reviewerId',
       storage: 'text',

@@ -20,7 +20,13 @@ export const draftsSchema: CollectionSchema = {
   collaboratorsField: 'collaborators',
   permissions: {
     '*': { read: false, create: false, update: false, delete: false },
-    member: { read: 'shared', create: true, update: 'shared', delete: 'own' },
+    member: {
+      read: 'shared',
+      create: true,
+      update: 'shared',
+      delete: 'own',
+      writableFields: ['title', 'channel', 'body', 'collaborators'],
+    },
     admin: { read: true, create: true, update: true, delete: true },
   },
 }
