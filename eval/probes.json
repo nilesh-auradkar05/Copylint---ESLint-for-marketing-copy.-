@@ -1,0 +1,12 @@
+[
+  {"q": "Where are permissions enforced?", "expect": "concepts/permissions"},
+  {"q": "How do I enforce one vote per user per poll?", "expect": "concepts/permissions"},
+  {"q": "Can anonymous visitors trigger developer-billed integration calls?", "expect": "guides/external-apis"},
+  {"q": "What is the maximum query length for knowledge search?", "expect": "bindings/knowledge"},
+  {"q": "What is the default number of attempts for a background job?", "expect": "guides/background-jobs"},
+  {"q": "Why not use ctx.waitUntil for long AI generations?", "expect": "guides/background-jobs"},
+  {"q": "How do I run a task every day at 9am in New York time?", "expect": "guides/scheduled-jobs"},
+  {"q": "Who pays when createDeepSpaceAI is called without an authToken?", "expect": "sdk-reference/worker/ai"},
+  {"q": "Where does npx deepspace deploy publish my app?", "expect": "index"},
+  {"q": "Do Google Workspace integrations need per-user OAuth?", "expect": "guides/external-apis"}
+]

@@ -1,0 +1,17 @@
+---
+description: Groundtruth project rules for Cursor (human takeover, debugging, final review)
+globs:
+alwaysApply: true
+---
+
+- Canonical rules: read `AGENTS.md` first. It overrides this file.
+- Cursor is used by the human for:
+  - takeover debugging when an agent loop stalls (2 failed review loops)
+  - final review
+  - demo seeding
+  - `SUBMISSION.md`
+- Do not start new feature work here that is not in `TASKS.md`. If you fix something during takeover:
+  - commit as `fix(<task>): ...`
+  - add a line to `docs/VERIFICATION-LOG.md` tagged `[human]`. These lines feed the "what I verified/changed" part of the submission.
+- Never edit tests to make them pass. Never run `npx deepspace push`. No secrets in files.
+- DeepSpace API truth: `node_modules/deepspace/dist/*.d.ts`, then `https://docs.deep.space/llms.txt`.
