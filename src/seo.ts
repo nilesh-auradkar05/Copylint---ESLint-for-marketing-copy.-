@@ -23,7 +23,7 @@
 declare const __DEEPSPACE_SITE_ORIGIN__: string | undefined
 
 export const seo = {
-  title: 'Groundtruth | Technical claims, with receipts',
+  title: 'CopyLint | Technical claims, with receipts',
   description: 'Check technical marketing claims against curated DeepSpace docs, with cited evidence and engineering review.',
   /** Public origin for canonical URLs, og:url, and the sitemap — no trailing
    *  slash. Replace with the custom domain once one is attached, e.g.

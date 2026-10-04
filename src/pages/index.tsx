@@ -11,7 +11,7 @@ export default function Landing() {
     <Seo {...seo} path="/" />
     <div className="proof-landing" data-testid="static-landing">
       <header className="proof-row" data-testid="app-navigation">
-        <a className="proof-wordmark" href="/">Groundtruth<span> / proof desk</span></a>
+        <a className="proof-wordmark" href="/">CopyLint<span> / proof desk</span></a>
         <a className="proof-link" data-testid="nav-sign-in-button" href="/settings">Sign in →</a>
       </header>
       <main>
@@ -19,7 +19,7 @@ export default function Landing() {
           <div><p className="proof-kicker">For developer marketing</p>
             <h1>Every claim needs a source.</h1>
             <p className="proof-intro">Check technical copy against curated DeepSpace docs. Keep the evidence beside the words, and ask an engineer to settle what remains.</p>
-            <a href="/settings" className="proof-cta">Sign in to Groundtruth →</a>
+            <a href="/settings" className="proof-cta">Sign in to CopyLint →</a>
             <p className="proof-muted">Draft. Check. Review. Then publish.</p>
           </div>
           <article className="proof-sheet" aria-label="Illustrative launch thread correction">
@@ -42,7 +42,7 @@ export default function Landing() {
           <Badge className="proof-verdict proof-unsupported">? Unsupported · needs judgment</Badge>
         </section>
       </main>
-      <footer className="proof-muted">Groundtruth · Technical claims, with receipts.</footer>
+      <footer className="proof-muted">CopyLint · Technical claims, with receipts.</footer>
     </div>
   </>
 }
