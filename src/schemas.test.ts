@@ -25,6 +25,7 @@ import {
   canDelete,
   canRead,
   canUpdate,
+  checkFieldPermissions,
   getRolePermissions,
   lintSchema,
   lintSchemas,
@@ -58,6 +59,13 @@ const SERVER_ONLY = [
 ] as const
 
 /** Roles a signed-out or unknown caller can end up with. See header note. */
+/**
+ * Collections no signed-in human role may write at all. Server code (job / cron / action) writes
+ * them with RBAC bypassed, so even `admin` gets create/update/delete = false. `signoffs` is not in
+ * this list: admins write those (T-002.5).
+ */
+const SERVER_WRITTEN_NO_ADMIN = ['draft_versions', 'claims', 'publications', 'sources', 'kb_state'] as const
+
 const SIGNED_OUT_ROLES = ['*', ROLE_ANONYMOUS, 'no-such-role'] as const
 
 const ALICE = 'user-alice'
@@ -423,6 +431,104 @@ describe('T-002.3 drafts permissions (member = writer)', () => {
     expect(canUpdate(drafts(), 'admin', privateOfBob, ADMIN_1)).toBe(true)
     expect(canDelete(drafts(), 'admin', privateOfBob, ADMIN_1)).toBe(true)
   })
+
+  // -------------------------------------------------------------------------------------------
+  // Hardening: members may write only user-facing fields. `latestVersionId` is server-owned (the
+  // verify job sets it), so a member who can update their draft must not be able to repoint it.
+  //
+  // SDK semantics, verified in node_modules/deepspace/dist/worker.js `checkFieldPermissions`:
+  //  - returns `null` when the write is allowed and an error STRING when refused
+  //    (`Role 'member' cannot modify field 'latestVersionId'`);
+  //  - a role with no `writableFields` is unrestricted (returns null);
+  //  - it iterates the keys of the caller's patch. On UPDATE the room passes the existing row's
+  //    `data`, and a key whose value is strictly `===` the stored value is skipped, so re-sending an
+  //    UNCHANGED latestVersionId is allowed while CHANGING it (or setting it first time) is refused.
+  //    On CREATE no existing data is passed, so any latestVersionId key is refused;
+  //  - the check is per key, so one forbidden key in an otherwise legal patch refuses the whole write.
+  // -------------------------------------------------------------------------------------------
+  describe('member writableFields on drafts', () => {
+    const USER_FIELDS = ['title', 'channel', 'body', 'collaborators']
+    const existing = { title: 'old', channel: 'blog', body: 'old', collaborators: [], latestVersionId: 'v-1' }
+
+    it('[T-002.3] drafts.permissions.member.writableFields is exactly title, channel, body, collaborators', () => {
+      const wf = schemaOf('drafts').permissions.member?.writableFields
+      expect(wf, 'member.writableFields must be declared').toBeDefined()
+      expect([...(wf ?? [])].sort()).toEqual([...USER_FIELDS].sort())
+    })
+
+    it('[T-002.3] member writableFields does not include latestVersionId', () => {
+      expect(schemaOf('drafts').permissions.member?.writableFields ?? []).not.toContain('latestVersionId')
+    })
+
+    it('[T-002.3] member cannot set latestVersionId on create (SDK checkFieldPermissions refuses)', () => {
+      const err = checkFieldPermissions(drafts(), 'member', {
+        title: 't',
+        body: 'b',
+        latestVersionId: 'forged-version',
+      })
+      expect(err).toEqual(expect.stringContaining('latestVersionId'))
+    })
+
+    it('[T-002.3] member cannot change latestVersionId on update (owner or collaborator)', () => {
+      const err = checkFieldPermissions(drafts(), 'member', { latestVersionId: 'forged-version' }, existing)
+      expect(err).toEqual(expect.stringContaining('latestVersionId'))
+    })
+
+    it('[T-002.3] member cannot set latestVersionId on a draft that has none yet', () => {
+      const err = checkFieldPermissions(drafts(), 'member', { latestVersionId: 'forged' }, { title: 'old' })
+      expect(err).toEqual(expect.stringContaining('latestVersionId'))
+    })
+
+    it('[T-002.3] one forbidden key refuses an otherwise legal member patch', () => {
+      const err = checkFieldPermissions(
+        drafts(),
+        'member',
+        { title: 'new', body: 'new', latestVersionId: 'forged' },
+        existing,
+      )
+      expect(err).toEqual(expect.stringContaining('latestVersionId'))
+    })
+
+    it('[T-002.3] member cannot write other server-owned or system keys either (e.g. createdBy)', () => {
+      expect(checkFieldPermissions(drafts(), 'member', { title: 't', createdBy: ALICE })).not.toBeNull()
+    })
+
+    it('[T-002.3] member may write title, channel, body and collaborators on create', () => {
+      expect(
+        checkFieldPermissions(drafts(), 'member', {
+          title: 't',
+          channel: 'thread',
+          body: 'b',
+          collaborators: [BOB],
+        }),
+      ).toBeNull()
+    })
+
+    it.each(USER_FIELDS.map((f) => [f] as const))('[T-002.3] member may update %s alone', (field) => {
+      const value = field === 'collaborators' ? [BOB] : field === 'channel' ? 'email' : 'changed'
+      expect(checkFieldPermissions(drafts(), 'member', { [field]: value }, existing)).toBeNull()
+    })
+
+    it('[T-002.3] a member patch that re-sends the unchanged latestVersionId is not refused (SDK skips unchanged values)', () => {
+      // Documents the SDK's strict-equality skip so the implementer is not surprised by it.
+      expect(
+        checkFieldPermissions(drafts(), 'member', { title: 'new', latestVersionId: 'v-1' }, existing),
+      ).toBeNull()
+    })
+
+    it('[T-002.3] the narrowing does not remove member create/update on drafts (still owner or collaborator)', () => {
+      expect(canCreate(drafts(), 'member')).toBe(true)
+      expect(canUpdate(drafts(), 'member', own, ALICE)).toBe(true)
+      expect(canUpdate(drafts(), 'member', sharedWithAliceArray, ALICE)).toBe(true)
+      expect(canUpdate(drafts(), 'member', privateOfBob, ALICE)).toBe(false)
+    })
+
+    it('[T-002.3] admin is not restricted: no writableFields, may write latestVersionId on create and update', () => {
+      expect(schemaOf('drafts').permissions.admin?.writableFields).toBeUndefined()
+      expect(checkFieldPermissions(drafts(), 'admin', { title: 't', latestVersionId: 'v-2' })).toBeNull()
+      expect(checkFieldPermissions(drafts(), 'admin', { latestVersionId: 'v-2' }, existing)).toBeNull()
+    })
+  })
 })
 
 // ---------------------------------------------------------------------------------------------
@@ -462,6 +568,33 @@ describe('T-002.4 server-written collections refuse member writes', () => {
 })
 
 // ---------------------------------------------------------------------------------------------
+// T-002.4  hardening: even admin cannot write the server-written collections
+// ---------------------------------------------------------------------------------------------
+
+describe('T-002.4 admin cannot write server-written collections (job / cron / action code bypasses RBAC)', () => {
+  for (const collection of SERVER_WRITTEN_NO_ADMIN) {
+    describe(collection, () => {
+      const schema = () => schemaOf(collection)
+      const adminOwned = rec(ADMIN_1, { reviewerId: ADMIN_1, collaborators: [ADMIN_1] })
+
+      it(`[T-002.4] admin cannot create ${collection}`, () => {
+        expect(canCreate(schema(), 'admin')).toBe(false)
+      })
+
+      it(`[T-002.4] admin cannot update ${collection}, even a row they created`, () => {
+        expect(canUpdate(schema(), 'admin', adminOwned, ADMIN_1)).toBe(false)
+        expect(canUpdate(schema(), 'admin', rec('server'), ADMIN_1)).toBe(false)
+      })
+
+      it(`[T-002.4] admin cannot delete ${collection}, even a row they created`, () => {
+        expect(canDelete(schema(), 'admin', adminOwned, ADMIN_1)).toBe(false)
+        expect(canDelete(schema(), 'admin', rec('server'), ADMIN_1)).toBe(false)
+      })
+    })
+  }
+})
+
+// ---------------------------------------------------------------------------------------------
 // T-002.5  signoffs and uniqueness
 // ---------------------------------------------------------------------------------------------
 
@@ -480,6 +613,27 @@ describe('T-002.5 signoffs gate and uniqueness', () => {
     const col = colOf('signoffs', 'reviewerId')
     expect(col.userBound).toBe(true)
     expect(col.immutable).toBe(true)
+  })
+
+  it('[T-002.5] claimId is immutable (an approval cannot be retargeted to another claim)', () => {
+    expect(colOf('signoffs', 'claimId').immutable).toBe(true)
+  })
+
+  it('[T-002.5] versionId is immutable (an approval cannot be moved to another version)', () => {
+    expect(colOf('signoffs', 'versionId').immutable).toBe(true)
+  })
+
+  it('[T-002.5] decision and note stay mutable (an admin may revise their own decision)', () => {
+    expect(colOf('signoffs', 'decision').immutable).not.toBe(true)
+    expect(colOf('signoffs', 'note').immutable).not.toBe(true)
+  })
+
+  it('[T-002.5] reviewerId, claimId and versionId are the only immutable signoff columns', () => {
+    const immutable = schemaOf('signoffs')
+      .columns.filter((c) => c.immutable === true)
+      .map((c) => c.name)
+      .sort()
+    expect(immutable).toEqual(['claimId', 'reviewerId', 'versionId'])
   })
 
   it('[T-002.5] reviewerId is the ownerField', () => {
