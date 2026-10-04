@@ -21,7 +21,7 @@ Update at the start and end of every session. Keep it under one screen.
 
 ## Waiting on / blocked
 - T-010 in progress in `/tmp/groundtruth-lane-b-t010`, branch `t/T-010-app-shell`; stop after reviewer verdict. Dev port: 5174.
-- T-001 scaffold is absent; Lane B is proceeding with fixtures and has requested the platform contracts in TASKS.md.
+- T-001 scaffold landed concurrently and Lane B rebased onto main. T-010 fixture review continues; live route/persistence integration split to T-010b pending T-002/T-003 contracts.
 
 ## Decisions made today
 - Plan compressed to 3 sprints (Sat/Sun/Mon); cut line fixed in docs/sprint-plan.md

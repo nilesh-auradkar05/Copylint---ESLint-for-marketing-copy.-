@@ -16,6 +16,7 @@
 | T-006 | `POST /api/drafts/:id/check` route + quota | A | S1 | T-002, T-005 | 1 h | TODO |
 | T-007 | Golden-set eval runner + prompt iteration | A | S2 | T-005 | 2 h | TODO |
 | T-010 | App shell, landing, drafts list/new, design tokens | B | S1 | T-001 | 2.5 h | IN_PROGRESS (B/orchestrator) |
+| T-010b | Wire T-010 draft views to live contracts and app navigation | B | S1 | T-010, T-002, T-003 | 0.5 h | BLOCKED (draft schema and engine contracts pending) |
 | T-011 | Review room (fixtures first, then live data) | B | S1→S2 | T-003 (contracts), T-010 | 3.5 h | TODO |
 | T-012 | Sign-off UI + derived badge | B | S2 | T-011, T-002 | 1.5 h | TODO |
 | T-013 | Accept fix → new version → re-check | B | S2 | T-011, T-006 | 1 h | TODO |
@@ -121,6 +122,8 @@
 ## T-010 · App shell, landing, drafts list/new, design · Lane B
 **Spec:** §6 (`/`, drafts list, new), §9.
 
+**Review split:** Keep this review to the fixture-ready landing, draft form/list, and activated theme. T-010b owns protected `/drafts` and `/drafts/new` route adapters, confirmed persistence, navigation/home wiring, shared config/gate consumption, and live browser coverage once Lane A contracts arrive. This separates the anticipated >400-line combined diff; the original T-010 acceptance below remains incomplete until that integration is verified.
+
 **Acceptance:**
 - T-010.1 The landing page is static, with no data hooks, and a sign-in CTA.
 - T-010.2 A signed-in member can create a draft (validation: title required, body ≤ 20k with live count) and sees it in the list.
@@ -216,7 +219,7 @@
 
 ## Contract change requests
 <!-- CONTRACT-CHANGE: <requester lane> <file> <what/why> — orchestrator A decides -->
-- CONTRACT-CHANGE: B / T-010 — T-001 scaffold is absent (no package.json, src, SDK types, or runtime); provide the official scaffold, authenticated (app) provider boundary, draft schema, and mutation-ready records contract. Continue UI work with fixtures; live auth, persistence, and port-5174 runtime verification remain blocked until these exist.
+- CONTRACT-CHANGE: B / T-010 — Scaffold dependency resolved by rebasing onto main c50928d. Still need the drafts schema, canonical maxBodyChars config, and derived badge contracts from T-002/T-003. Continue UI work with fixtures; T-010b will wire protected routes and confirmed persistence without editing Lane A files.
 
 ## Test disputes
 <!-- TEST-DISPUTE: <task> <test> <reason> — decision: ... -->
