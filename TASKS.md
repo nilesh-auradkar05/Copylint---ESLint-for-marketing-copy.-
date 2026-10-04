@@ -8,9 +8,9 @@
 
 | ID | Title | Lane | Sprint | Deps | Timebox | Status |
 |---|---|---|---|---|---|---|
-| T-001 | Repo, scaffold, GitHub source, first deploy | Human + A | S0 | – | 1.5 h | READY |
-| T-002 | Schemas + RBAC (7 collections) | A | S1 | T-001 | 1.5 h | TODO |
-| T-003 | Engine contracts: ids, spans, gate, citations | A | S1 | T-001 | 1.5 h | TODO |
+| T-001 | Repo, scaffold, GitHub source, first deploy | Human + A | S0 | – | 1.5 h | IN_PROGRESS (A: scaffold on main; Human: GitHub remote, login, app init, deploy) |
+| T-002 | Schemas + RBAC (7 collections) | A | S1 | T-001 | 1.5 h | IN_PROGRESS (A/test-author) |
+| T-003 | Engine contracts: ids, spans, gate, citations | A | S1 | T-001 | 1.5 h | IN_PROGRESS (A/test-author) |
 | T-004 | Knowledge binding + `sync-sources` job + probes | A | S1 | T-002 | 2 h | TODO |
 | T-005 | `verify-draft` job (extract → retrieve → judge → write) | A | S1 | T-003, T-004 | 3 h | TODO |
 | T-006 | `POST /api/drafts/:id/check` route + quota | A | S1 | T-002, T-005 | 1 h | TODO |
