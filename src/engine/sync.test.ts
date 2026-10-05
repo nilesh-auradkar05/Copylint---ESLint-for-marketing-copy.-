@@ -54,12 +54,16 @@ class FakeRecords {
     if (o?.limit !== undefined) list = list.slice(0, o.limit)
     return { success: true, data: { records: list.map(([id, d]) => this.rec(c, id, d)), count: list.length } }
   }) as unknown as SyncDeps['records']['query']
+  /** When set and it returns true, that write fails with { success: false } (infrastructure failure). */
+  failWhen: ((op: 'create' | 'update', c: string, id: string) => boolean) | null = null
   create = (async (c: string, data: Data, id?: string): Promise<ActionResult<{ recordId: string }>> => {
+    if (this.failWhen?.('create', c, id ?? '')) return { success: false, error: 'disk on fire' }
     const recordId = id ?? `gen-${this.col(c).size + 1}`
     this.col(c).set(recordId, { ...data }) // upsert, as the ActionTools doc describes for a known key
     return { success: true, data: { recordId } }
   }) as unknown as SyncDeps['records']['create']
   update = (async (c: string, id: string, patch: Data): Promise<ActionResult<{ recordId: string }>> => {
+    if (this.failWhen?.('update', c, id)) return { success: false, error: 'disk on fire' }
     const d = this.col(c).get(id)
     if (!d) return { success: false, error: 'Record not found' }
     this.col(c).set(id, { ...d, ...patch }) // put/update merges
@@ -78,7 +82,8 @@ interface AddCall {
 class FakeKb {
   items = new Map<string, KnowledgeItem & { folder: string }>()
   adds: AddCall[] = []
-  removes: string[] = []
+  removes: string[] = [] // successful removes
+  removeAttempts: string[] = [] // every remove() call, failed or not
   listOptions: Array<Record<string, unknown> | undefined> = []
   log: string[] = [] // ordered: `add:<file>`, `remove:<id>`
   private seq = 0
@@ -87,23 +92,39 @@ class FakeKb {
   statusFor: (key: string, poll: number) => KnowledgeStatus = () => 'completed'
   /** Filenames whose add() throws a KnowledgeError. */
   failAdd = new Set<string>()
+  /** Item ids whose remove() throws a KnowledgeError (the item stays in the store). */
+  failRemove = new Set<string>()
+  /** When set, every list() call throws this. */
+  listError: Error | null = null
+  /** Called at the start of every list() call, with the 1-based call number. */
+  onList: ((call: number) => void) | null = null
+  /** Filenames that list() never returns (the item exists upstream but is invisible to the listing). */
+  hideFromList = new Set<string>()
+  /** Filename -> id that add() must return (platform upsert on the same key). */
+  reuseId = new Map<string, string>()
 
   add = async (file: File, options?: { folder?: string }) => {
     if (this.failAdd.has(file.name)) throw new KnowledgeError(500, 'ingest_failed', `boom on ${file.name}`)
-    const id = `item-${++this.seq}`
+    const id = this.reuseId.get(file.name) ?? `item-${++this.seq}`
     this.items.set(id, { id, key: file.name, status: 'queued', folder: options?.folder ?? '' })
     this.adds.push({ name: file.name, type: file.type, text: await file.text(), folder: options?.folder, itemId: id })
     this.log.push(`add:${file.name}`)
     return { items: [{ id, key: file.name, status: 'queued' as const }] }
   }
   remove = async (id: string) => {
+    this.removeAttempts.push(id)
+    if (this.failRemove.has(id)) throw new KnowledgeError(500, 'remove_failed', `cannot remove ${id}`)
     this.items.delete(id)
     this.removes.push(id)
     this.log.push(`remove:${id}`)
   }
   list = async (options?: { folder?: string; page?: number; perPage?: number; status?: KnowledgeStatus }) => {
     this.listOptions.push(options as Record<string, unknown> | undefined)
-    let items = [...this.items.values()].filter((i) => options?.folder === undefined || i.folder === options.folder)
+    this.onList?.(this.listOptions.length)
+    if (this.listError) throw this.listError
+    let items = [...this.items.values()].filter(
+      (i) => (options?.folder === undefined || i.folder === options.folder) && !this.hideFromList.has(i.key),
+    )
     items = items.map((i) => {
       const n = (this.polls.get(i.id) ?? 0) + 1
       this.polls.set(i.id, n)
@@ -332,7 +353,7 @@ describe('syncSources: a page changes (T-004.4)', () => {
     expect(result.errors).toEqual([])
   })
 
-  it('[T-004.4] uploads the new copy before removing the old one (never leaves the page unsearchable)', async () => {
+  it('[T-004.4] uploads the new copy before removing the old one (add happens before remove)', async () => {
     await syncSources(h.deps)
     h.kb.log.length = 0
     h.bodies.set(PAGE, MODIFIED)
@@ -468,5 +489,280 @@ describe('syncSources: one page fails (T-004.7)', () => {
     expect(result.changedPages).toEqual([])
     expect(h.kb.adds).toEqual([])
     expect(h.records.rows('kb_state').find((r) => r.id === 'global')?.data.version ?? 0).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// Review loop 1 (T-004). Contract amendments A-G.
+// ---------------------------------------------------------------------------------------------
+
+const settle = (p: Promise<unknown>): Promise<'resolved' | 'rejected'> =>
+  p.then(
+    () => 'resolved' as const,
+    () => 'rejected' as const,
+  )
+
+describe('syncSources: kb_state bump survives a mid-sync failure (amendment A)', () => {
+  const PAGE = 'guides/external-apis'
+  const MODIFIED = '# guides/external-apis\n\nAnonymous callers may now trigger developer-billed calls.\n'
+
+  it('[T-004.4] a changed page is still counted (version 2, lastChangedPages) when kb.list throws during the index wait, and the original error is rethrown', async () => {
+    await syncSources(h.deps)
+    expect(kbVersion()).toBe(1)
+    h.bodies.set(PAGE, MODIFIED)
+    const boom = new KnowledgeError(503, 'unavailable', 'kb list is down')
+    h.kb.listError = boom
+
+    await expect(syncSources(h.deps)).rejects.toBe(boom)
+
+    // The page's sources row already carries the new hash, so the next sync will see it as unchanged:
+    // the bump must have been persisted now or the change is never surfaced as drift.
+    expect(h.records.row('sources', rowId(PAGE))?.contentHash).toBe(await oracle(MODIFIED))
+    const state = h.records.row('kb_state', 'global')
+    expect(state?.version).toBe(2)
+    expect(state?.lastChangedPages).toContain(PAGE)
+    expect(ISO(state?.lastSyncAt)).toBe(true)
+  })
+
+  it('[T-004.4] the bump is persisted when a record write for a LATER page fails after the changed page was written', async () => {
+    const [changed, later] = ALL as [string, string]
+    await syncSources(h.deps)
+    h.bodies.set(changed, 'first page rewritten')
+    h.records.failWhen = (op, c, id) => op === 'update' && c === 'sources' && id === rowId(later)
+
+    await expect(syncSources(h.deps)).rejects.toThrow(/disk on fire/)
+
+    expect(h.records.row('sources', rowId(changed))?.contentHash).toBe(await oracle('first page rewritten'))
+    const state = h.records.row('kb_state', 'global')
+    expect(state?.version).toBe(2)
+    expect(state?.lastChangedPages).toContain(changed)
+  })
+
+  it('[T-004.7] a mid-sync record-write failure with NO changed page leaves kb_state untouched', async () => {
+    const later = ALL[1] as string
+    await syncSources(h.deps)
+    const before = structuredClone(h.records.row('kb_state', 'global'))
+    h.records.failWhen = (op, c, id) => op === 'update' && c === 'sources' && id === rowId(later)
+
+    await expect(syncSources(h.deps)).rejects.toThrow(/disk on fire/)
+
+    expect(h.records.row('kb_state', 'global')).toEqual(before)
+    expect(kbVersion()).toBe(1)
+  })
+
+  it('[T-004.7] a kb.list failure while re-polling an unchanged page (no changed page) leaves the version untouched', async () => {
+    h.kb.statusFor = (key) => (key === 'guides__messaging.md' ? 'running' : 'completed')
+    await syncSources(h.deps) // times out, row left indexing, version 1
+    const before = structuredClone(h.records.row('kb_state', 'global'))
+    h.kb.listError = new KnowledgeError(503, 'unavailable', 'kb list is down')
+
+    await expect(syncSources(h.deps)).rejects.toThrow('kb list is down')
+
+    expect(h.records.row('kb_state', 'global')).toEqual(before)
+    expect(kbVersion()).toBe(1)
+  })
+})
+
+describe('syncSources: removing the previous copy (amendments B, C)', () => {
+  const PAGE = 'guides/external-apis'
+  const MODIFIED = '# guides/external-apis\n\nAnonymous callers may now trigger developer-billed calls.\n'
+
+  it('[T-004.4] a failed kb.remove keeps the old id on the row next to the new ids, and the page still succeeds', async () => {
+    await syncSources(h.deps)
+    const [oldId] = h.kb.idsFor(fileFor(PAGE)) as [string]
+    h.kb.failRemove.add(oldId)
+    h.bodies.set(PAGE, MODIFIED)
+
+    const result = await syncSources(h.deps) // must resolve
+
+    const newId = h.kb.idsFor(fileFor(PAGE)).at(-1) as string
+    expect(newId).not.toBe(oldId)
+    expect([...(h.records.row('sources', rowId(PAGE))?.kbItemIds as string[])].sort()).toEqual([newId, oldId].sort())
+    expect(h.records.row('sources', rowId(PAGE))?.contentHash).toBe(await oracle(MODIFIED))
+    expect(result.errors.map((e) => e.path)).toEqual([PAGE])
+    expect(result.changedPages).toEqual([PAGE])
+    expect(result.version).toBe(2)
+  })
+
+  it('[T-004.4] the next sync (page unchanged) removes the leftover old id once, adds nothing, and ends with only the current ids, without a version bump', async () => {
+    await syncSources(h.deps)
+    const [oldId] = h.kb.idsFor(fileFor(PAGE)) as [string]
+    h.kb.failRemove.add(oldId)
+    h.bodies.set(PAGE, MODIFIED)
+    await syncSources(h.deps)
+    const newId = h.kb.idsFor(fileFor(PAGE)).at(-1) as string
+    const stateBefore = structuredClone(h.records.row('kb_state', 'global'))
+
+    h.kb.failRemove.clear()
+    const addsBefore = h.kb.adds.length
+    const attemptsBefore = h.kb.removeAttempts.length
+    const result = await syncSources(h.deps)
+
+    expect(h.kb.adds.length).toBe(addsBefore)
+    expect(h.kb.removeAttempts.slice(attemptsBefore)).toEqual([oldId])
+    expect(h.kb.removes).toContain(oldId)
+    expect(h.records.row('sources', rowId(PAGE))?.kbItemIds).toEqual([newId])
+    expect(result.errors).toEqual([])
+    expect(result.version).toBe(2)
+    expect(h.records.row('kb_state', 'global')).toEqual(stateBefore)
+  })
+
+  it('[T-004.4] once cleaned up, a further sync makes no kb.remove calls at all', async () => {
+    await syncSources(h.deps)
+    const [oldId] = h.kb.idsFor(fileFor(PAGE)) as [string]
+    h.kb.failRemove.add(oldId)
+    h.bodies.set(PAGE, MODIFIED)
+    await syncSources(h.deps)
+    h.kb.failRemove.clear()
+    await syncSources(h.deps) // cleanup
+    const attemptsBefore = h.kb.removeAttempts.length
+    await syncSources(h.deps)
+    expect(h.kb.removeAttempts.length).toBe(attemptsBefore)
+  })
+
+  it('[T-004.4] never removes an id that kb.add just returned again (platform upsert on the same key)', async () => {
+    await syncSources(h.deps)
+    const [oldId] = h.kb.idsFor(fileFor(PAGE)) as [string]
+    h.kb.reuseId.set(fileFor(PAGE), oldId)
+    h.bodies.set(PAGE, MODIFIED)
+
+    const result = await syncSources(h.deps)
+
+    expect(h.kb.removeAttempts).not.toContain(oldId)
+    expect(h.kb.removes).toEqual([])
+    expect(h.kb.items.has(oldId)).toBe(true)
+    expect(h.records.row('sources', rowId(PAGE))?.kbItemIds).toEqual([oldId])
+    expect(h.records.row('sources', rowId(PAGE))?.contentHash).toBe(await oracle(MODIFIED))
+    expect(result.errors).toEqual([])
+    expect(result.changedPages).toEqual([PAGE])
+  })
+})
+
+describe('syncSources: abort stops the index wait (amendment D)', () => {
+  it('[T-004.7] aborting while polling kb.list rejects promptly: at most one more list call, no waiting out syncIndexWaitMs, bump persisted', async () => {
+    h.kb.statusFor = (key) => (key === 'guides__messaging.md' ? 'running' : 'completed')
+    const controller = new AbortController()
+    let abortedAtCall = 0
+    h.kb.onList = (call) => {
+      if (call === 2) {
+        abortedAtCall = call
+        controller.abort()
+      }
+    }
+    const start = h.clock.ms
+
+    const outcome = await settle(syncSources({ ...h.deps, signal: controller.signal }))
+
+    expect(outcome).toBe('rejected')
+    expect(abortedAtCall).toBe(2)
+    expect(h.kb.listOptions.length).toBeLessThanOrEqual(abortedAtCall + 1)
+    expect(h.clock.ms - start).toBeLessThan(CONFIG.job.syncIndexWaitMs)
+    // All 25 pages were ingested before the wait began; that change must not be lost (amendment A).
+    expect(kbVersion()).toBe(1)
+  })
+
+  it('[T-004.7] aborting during the poll sleep rejects without another kb.list call and without waiting out the window', async () => {
+    h.kb.statusFor = (key) => (key === 'guides__messaging.md' ? 'running' : 'completed')
+    const controller = new AbortController()
+    const baseSleep = h.deps.sleep as (ms: number) => Promise<void>
+    let sleepCalls = 0
+    const deps: SyncDeps = {
+      ...h.deps,
+      signal: controller.signal,
+      sleep: async (ms) => {
+        sleepCalls += 1
+        if (sleepCalls === 1) controller.abort()
+        await baseSleep(ms)
+      },
+    }
+    const start = h.clock.ms
+
+    const outcome = await settle(syncSources(deps))
+
+    expect(outcome).toBe('rejected')
+    expect(sleepCalls).toBe(1)
+    expect(h.kb.listOptions.length).toBeLessThanOrEqual(2) // the first poll, plus at most one in flight
+    expect(h.clock.ms - start).toBeLessThan(CONFIG.job.syncIndexWaitMs)
+    expect(kbVersion()).toBe(1)
+  })
+})
+
+describe('syncSources: indexing outcomes (amendments E, F)', () => {
+  const STUCK = 'guides/messaging'
+
+  it('[T-004.7] a pending item that kb.list never returns ends as error with a blank hash, listed in errors and not in indexing (amendment E)', async () => {
+    h.kb.hideFromList.add(fileFor(STUCK))
+    const result = await syncSources(h.deps)
+
+    const row = h.records.row('sources', rowId(STUCK))
+    expect(row?.indexStatus).toBe('error')
+    expect(row?.contentHash).toBe('')
+    expect(result.errors.map((e) => e.path)).toContain(STUCK)
+    expect(result.indexing).not.toContain(STUCK)
+    expect(h.records.row('sources', 'index')?.indexStatus).toBe('completed')
+    // It was ingested, so the version still moves.
+    expect(result.changedPages).toContain(STUCK)
+    expect(kbVersion()).toBe(1)
+  })
+
+  it('[T-004.7] a page whose item vanished from the listing is re-uploaded on the next sync (amendment E)', async () => {
+    h.kb.hideFromList.add(fileFor(STUCK))
+    await syncSources(h.deps)
+    h.kb.hideFromList.clear()
+    const addsBefore = h.kb.adds.length
+
+    const result = await syncSources(h.deps)
+
+    expect(h.kb.adds.slice(addsBefore).map((a) => a.name)).toEqual([fileFor(STUCK)])
+    expect(h.records.row('sources', rowId(STUCK))?.indexStatus).toBe('completed')
+    expect(result.errors).toEqual([])
+  })
+
+  it('[T-004.7] an item that reaches SDK status error blanks the hash, is reported, and is re-uploaded on the next sync (amendment F)', async () => {
+    h.kb.statusFor = (key) => (key === fileFor(STUCK) ? 'error' : 'completed')
+    const first = await syncSources(h.deps)
+
+    const row = h.records.row('sources', rowId(STUCK))
+    expect(row?.indexStatus).toBe('error')
+    expect(row?.contentHash).toBe('')
+    expect(first.errors.map((e) => e.path)).toEqual([STUCK])
+    expect(first.indexing).toEqual([])
+
+    h.kb.statusFor = () => 'completed'
+    const addsBefore = h.kb.adds.length
+    const second = await syncSources(h.deps)
+
+    expect(h.kb.adds.slice(addsBefore).map((a) => a.name)).toEqual([fileFor(STUCK)])
+    expect(h.records.row('sources', rowId(STUCK))?.indexStatus).toBe('completed')
+    expect(h.records.row('sources', rowId(STUCK))?.contentHash).toBe(
+      await oracle(`# ${STUCK}\n\nOriginal content of ${STUCK}.\n`),
+    )
+    expect(second.errors).toEqual([])
+  })
+
+  it('[T-004.2] SDK status skipped counts as completed (amendment F)', async () => {
+    h.kb.statusFor = (key) => (key === fileFor(STUCK) ? 'skipped' : 'completed')
+    const result = await syncSources(h.deps)
+    expect(h.records.row('sources', rowId(STUCK))?.indexStatus).toBe('completed')
+    expect(result.indexing).toEqual([])
+    expect(result.errors).toEqual([])
+  })
+
+  it('[T-004.3] an unchanged row left indexing by a previous timeout is re-polled and becomes completed with zero kb.add (amendment F)', async () => {
+    h.kb.statusFor = (key) => (key === fileFor(STUCK) ? 'running' : 'completed')
+    const first = await syncSources(h.deps)
+    expect(first.indexing).toEqual([STUCK])
+    expect(h.records.row('sources', rowId(STUCK))?.indexStatus).toBe('indexing')
+
+    h.kb.statusFor = () => 'completed'
+    const addsBefore = h.kb.adds.length
+    const second = await syncSources(h.deps)
+
+    expect(h.kb.adds.length).toBe(addsBefore)
+    expect(h.records.row('sources', rowId(STUCK))?.indexStatus).toBe('completed')
+    expect(second.indexing).toEqual([])
+    expect(second.errors).toEqual([])
+    expect(second.version).toBe(1)
+    expect(kbVersion()).toBe(1)
   })
 })
