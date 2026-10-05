@@ -1,4 +1,4 @@
-# todo.md — live working list (Mon Oct 5, 3:50 PM ET)
+# todo.md — live working list (Mon Oct 5, 5:25 PM ET)
 
 Short-horizon checklist for the human and both orchestrators. `TASKS.md` is the backlog; this is "right now".
 Update at the start and end of every session. Keep it under one screen.
