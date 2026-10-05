@@ -6,6 +6,7 @@
 
 import { z } from 'zod'
 import type { Hono } from 'hono'
+import { RECORD_NOT_FOUND } from 'deepspace/worker'
 import type { ActionTools } from 'deepspace/worker'
 import { CONFIG } from '../engine/config'
 import { sha256hex, versionId as deriveVersionId } from '../engine/ids'
@@ -30,7 +31,7 @@ const DraftRow = z.object({
   // json column: the SDK stores either an array or a JSON string.
   collaborators: z.union([z.array(z.string()), z.string()]).nullish(),
 })
-const VersionRow = z.object({ status: z.string(), jobId: z.string().default('') })
+const VersionRow = z.object({ status: z.string(), jobId: z.string().default(''), requestedAt: z.string().default('') })
 const KbStateRow = z.object({ version: z.number().default(0) })
 const QuotaRow = z.object({ requestedAt: z.string().default('') })
 
@@ -59,7 +60,11 @@ export function registerCheckRoutes(app: Hono<AppContext>, deps: CheckRouteDeps)
     // A hidden draft and a missing one are indistinguishable.
     const notFound = (): Response => c.json({ error: 'Draft not found' }, 404)
     const found = await records.get('drafts', draftId)
-    if (!found.success) return notFound()
+    if (!found.success) {
+      // Only a genuinely missing row is a 404; a storage failure must not look like "no such draft".
+      if (!found.error.includes(RECORD_NOT_FOUND)) return c.json({ error: 'Storage unavailable' }, 503)
+      return notFound()
+    }
     const draft = DraftRow.parse(found.data.record.data)
     const allowed =
       role === 'admin' ||
@@ -70,6 +75,7 @@ export function registerCheckRoutes(app: Hono<AppContext>, deps: CheckRouteDeps)
     if (draft.body.length > CONFIG.limits.maxBodyChars) return c.json({ error: 'Draft is too long to check' }, 413)
 
     const kbRes = await records.get('kb_state', 'global')
+    if (!kbRes.success && !kbRes.error.includes(RECORD_NOT_FOUND)) return c.json({ error: 'Storage unavailable' }, 503)
     const kbVersion = kbRes.success ? KbStateRow.parse(kbRes.data.record.data).version : 0
     const versionId = await deriveVersionId(draftId, draft.body, kbVersion)
 
@@ -77,10 +83,20 @@ export function registerCheckRoutes(app: Hono<AppContext>, deps: CheckRouteDeps)
     const existing = await records.get('draft_versions', versionId)
     if (existing.success) {
       const version = VersionRow.parse(existing.data.record.data)
+      const ageMs = now.getTime() - Date.parse(version.requestedAt) // NaN when missing or unparseable
       if (version.status === 'checked') return c.json({ versionId, cached: true }, 200)
-      if (version.status === 'checking') return c.json({ versionId, jobId: version.jobId }, 202)
+      // A `checking` row whose job never finished (no timestamp counts as dead) is re-run below.
+      if (version.status === 'checking' && ageMs <= CONFIG.job.checkingStaleMs) {
+        return c.json({ versionId, jobId: version.jobId }, 202)
+      }
+      // A failed check may not be retried immediately; after the cooldown it re-runs (and counts toward quota).
+      if (version.status === 'failed' && ageMs < CONFIG.job.failedRetryCooldownMs) {
+        return c.json({ error: 'Check failed recently; try again shortly' }, 429)
+      }
     }
 
+    // The count and the later write are not atomic: parallel POSTs on different drafts can exceed the
+    // limit by the number in flight. Accepted (bounded, small).
     // Newest first and bounded to the limit: enough to decide, and an old history cannot hide recent checks.
     const recent = await records.query('draft_versions', {
       where: { requestedBy: auth.userId },
@@ -123,10 +139,16 @@ export function registerCheckRoutes(app: Hono<AppContext>, deps: CheckRouteDeps)
     } catch (err) {
       console.error('[check] enqueue failed:', String(err))
       // Never leave the version stuck `checking` with no job behind it.
-      await records.update('draft_versions', versionId, { status: 'failed' })
+      try {
+        const res = await records.update('draft_versions', versionId, { status: 'failed' })
+        if (!res.success) console.error('[check] could not mark version failed:', res.error)
+      } catch (e) {
+        console.error('[check] could not mark version failed:', String(e))
+      }
       return c.json({ error: 'Could not start the check' }, 500)
     }
-    await records.update('draft_versions', versionId, { jobId })
+    const linked = await records.update('draft_versions', versionId, { jobId })
+    if (!linked.success) console.error('[check] could not store jobId on version:', linked.error)
     return c.json({ jobId, versionId }, 202)
   })
 }
