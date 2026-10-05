@@ -248,6 +248,52 @@ describe('publishDraft validation', () => {
   })
 })
 
+// Strict wire shape (Lane B T-016 reads it). Deliberately not routed through the lenient payload()/refused() helpers.
+describe('publishDraft result shape', () => {
+  it('[T-014.1] gate refusal is exactly { success: true, data: { ok: false, reason, blocking } }', async () => {
+    claim('c1', 'contradicted')
+    expect(await publish(OWNER)).toEqual({ success: true, data: { ok: false, reason: 'not_ship_ready', blocking: ['c1'] } })
+  })
+  it('[T-014.2] success is exactly { success: true, data: { ok: true, publicationId } }', async () => {
+    const r = await publish(OWNER)
+    expect(r).toEqual({ success: true, data: { ok: true, publicationId: records.rows('publications')[0].id } })
+  })
+  it('[T-014.3] a stranger gets exactly { success: false, code: forbidden, error }', async () => {
+    expect(await publish(STRANGER)).toEqual({ success: false, code: 'forbidden', error: expect.any(String) })
+  })
+  it('[T-014.4] a bad url gets exactly { success: false, code: invalid_request, error }', async () => {
+    expect(await publish(OWNER, { url: 'not a url' })).toEqual({ success: false, code: 'invalid_request', error: expect.any(String) })
+  })
+})
+
+describe('publishDraft idempotency', () => {
+  it('[T-014.2] same version and url twice returns the same publicationId and leaves one row', async () => {
+    const a = (await publish(OWNER)) as { data: { publicationId: string } }
+    const b = (await publish(OWNER)) as { data: { publicationId: string } }
+    expect(b.data.publicationId).toBe(a.data.publicationId)
+    expect(records.rows('publications')).toHaveLength(1)
+  })
+  it('[T-014.2] same version at a different url creates a second row', async () => {
+    const a = (await publish(OWNER)) as { data: { publicationId: string } }
+    const b = (await publish(OWNER, { url: 'https://example.com/blog/other' })) as { data: { publicationId: string } }
+    expect(b.data.publicationId).not.toBe(a.data.publicationId)
+    expect(records.rows('publications').map((p) => (p as Data).url).sort()).toEqual([URL_OK, 'https://example.com/blog/other'])
+  })
+})
+
+describe('publishDraft fails closed on unreadable claims', () => {
+  it.each([
+    ['missing verdict', { versionId: 'v1', text: 'x' }],
+    ['invalid verdict', { versionId: 'v1', verdict: 'maybe' }],
+  ])('[T-014.1] a claims row with a %s is refused (read_failed) and creates no row', async (_n, data) => {
+    claim('c1', 'supported')
+    records.seed('claims', 'bad', data)
+    const r = await publish(OWNER)
+    expect(r).toMatchObject({ success: false, code: 'read_failed' })
+    noPublications()
+  })
+})
+
 describe('publishDraft output hygiene', () => {
   it.each([
     ['success', OWNER, () => undefined],
