@@ -49,7 +49,12 @@ export const CheckRequest = z.object({}).strict()
 export const PublishRequest = z.object({
   draftId: z.string(),
   versionId: z.string(),
-  url: z.string().url().max(500),
+  // http(s) only: the URL is rendered as a link, so `javascript:` and friends must never be stored.
+  url: z
+    .string()
+    .max(500)
+    .url()
+    .refine((u) => /^https?:\/\//i.test(u), 'url must be http or https'),
 })
 
 // Flattened record shapes (id + record.data) consumed by the gate and the UI.
