@@ -1,4 +1,4 @@
-# todo.md — live working list (Mon Oct 5, 1:25 PM ET)
+# todo.md — live working list (Mon Oct 5, 2:05 PM ET)
 
 Short-horizon checklist for the human and both orchestrators. `TASKS.md` is the backlog; this is "right now".
 Update at the start and end of every session. Keep it under one screen.
@@ -11,7 +11,7 @@ Update at the start and end of every session. Keep it under one screen.
 - [ ] Human: run the FIRST real sync from the deployed app, not local dev (they share one knowledge base but not the `sources` table: syncing from both duplicates every page)
 
 ## Next up
-- Lane A: T-005, T-006, T-014 merged to lane-a (all REVIEW: live checks pending) → T-020 (in progress) → T-023. T-007 eval needs T-005 live
+- Lane A: T-005, T-006, T-014 merged to lane-a (all REVIEW: live checks pending) → T-020 (next; not started) → T-023. T-007 eval needs T-005 live
 - Lane B note (T-016): `publishDraft` returns `{success:true, data:{ok:true, publicationId}}`, or `{success:true, data:{ok:false, reason:'not_ship_ready', blocking:[claimIds]}}`, or `{success:false, code, error}`. Params `{draftId, versionId, url}`, url http(s) only. Only the draft owner or a collaborator may publish; an admin who is neither is refused, so do not show them Publish
 - Lane B note (T-011b): draft links 404'd because `/drafts/:id` had no page. Lane A added a thin adapter, `src/pages/(app)/(protected)/drafts/[id].tsx` (live queries → `ReviewRoom`, *Check claims* POSTs the route with a Bearer token, inline error). T-011b is unblocked (T-005/T-006 are on main): build on that file; still missing are `useJobs` progress, per-status copy, tests, and the two-browser check
 - Lane B note (T-011.3): `POST /api/drafts/:id/check` answers `202 {jobId, versionId}` (new or still running), `200 {versionId, cached:true}`, `401`, `403`, `404`, `413`, `429` (daily limit OR a failed check retried within 5 min; read `error`), `500`, `503` (storage). Send no body
