@@ -10,7 +10,8 @@ Update at the start and end of every session. Keep it under one screen.
 
 ## Next up
 - Lane A: T-005 (READY) → T-006 → T-014 → T-020 → T-023. T-007 eval needs T-005 live
-- Lane B: T-010b is unblocked (T-002/T-003 merged); T-011 fixtures in `eval/fixtures/review-room.json`
+- Lane B: T-010b IN_PROGRESS on `t/T-010b-live-drafts` (independent tests committed; live route implementation next), then T-011. Lane B tests use port 5174.
+- Lane B: authentication and 4 usable test accounts confirmed; T-002/T-003 contracts and review-room fixture are available.
 - Lane B note: `AppJobRoom` socket is now admin-write / member-read. Members enqueue only via the check route (T-006)
 
 ## Waiting on the human, after first deploy (T-004)
