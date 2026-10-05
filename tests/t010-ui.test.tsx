@@ -113,6 +113,16 @@ test('[T-010b] unresolved evidence queries never show ship-ready', async () => {
   await render(<DraftList ready dataReady={false} drafts={[{ recordId: 'd1', updatedAt: checked.requestedAt, data: { title: 'Launch', channel: 'thread', body: checked.body, latestVersionId: 'v1' } }]} onCreate={vi.fn()} versions={[checked]} claims={[]} signoffs={[]} kbVersion={1} />)
   expect(document.querySelector('.proof-verdict')?.textContent).not.toContain('SHIP-READY')
 })
+test.each([
+  { name: 'first check before a latest pointer exists', latestVersionId: undefined, versions: [{ ...checked, id: 'pending', status: 'checking' }], expected: 'CHECKING' },
+  { name: 're-check while latest pointer still names old body', latestVersionId: 'v1', versions: [{ ...checked, body: 'Old copy' }, { ...checked, id: 'pending', status: 'checking' }], expected: 'CHECKING' },
+  { name: 'unrelated body is checking', latestVersionId: 'v1', versions: [checked, { ...checked, id: 'pending', body: 'Other copy', status: 'checking' }], expected: 'SHIP-READY' },
+  { name: 'older docs version is checking', latestVersionId: 'v1', versions: [checked, { ...checked, id: 'pending', kbVersion: 0, status: 'checking' }], expected: 'SHIP-READY' },
+] as const)('[T-010b] in-flight snapshot badge: $name', async ({ latestVersionId, versions, expected }) => {
+  const DraftList = await load('components/DraftList.tsx', 'DraftList')
+  await render(<DraftList ready drafts={[{ recordId: 'd1', updatedAt: checked.requestedAt, data: { title: 'Launch', channel: 'thread', body: checked.body, latestVersionId } }]} onCreate={vi.fn()} versions={versions} claims={[]} signoffs={[]} kbVersion={1} />)
+  expect(document.querySelector('.proof-verdict')?.textContent).toContain(expected)
+})
 
 test('[T-010.4] create and sample controls stay disabled until mutation readiness', async () => {
   const DraftForm = await load('components/DraftForm.tsx', 'DraftForm')
