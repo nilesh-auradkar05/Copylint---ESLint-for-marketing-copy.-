@@ -4,6 +4,7 @@ import { getAuthToken, useJobs, useQuery } from 'deepspace'
 import { ReviewRoom } from '@/components/ReviewRoom'
 import type { DraftInput } from '@/components/DraftForm'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
 import type { Claim, Signoff, Version } from '@/engine/contracts'
 import { SCOPE_ID } from '@/constants'
 
@@ -19,6 +20,7 @@ export default function DraftPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [url, setUrl] = useState('')
   const queries = [drafts, versions, claims, signoffs, kb]
   const failed = queries.find(query => query.status === 'error')
   if (failed) return <section className="proof-page" role="alert"><p className="proof-error">Could not load this draft. {failed.error}</p></section>
@@ -40,11 +42,27 @@ export default function DraftPage() {
       else if (result?.cached) setNotice('Nothing to re-check: this exact text was already checked against the current docs. Edit the draft, or wait for a docs update, to run a new check.')
     } catch { setError('Could not reach the server. Try again.') } finally { setBusy(false) }
   }
+  // ponytail: inline publish control so the gate is reachable; T-016 (Lane B) owns the modal and /publications page.
+  const publish = async () => {
+    if (!version) return
+    setBusy(true); setError(''); setNotice('')
+    try {
+      const response = await fetch('/api/actions/publishDraft', { method: 'POST', headers: { Authorization: `Bearer ${await getAuthToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ draftId: id, versionId: version.recordId, url }) })
+      const result = await response.json().catch(() => null) as { success?: boolean; error?: string; data?: { ok: boolean; blocking?: string[] } } | null
+      if (result?.data?.ok) setNotice(`Published at ${url}.`)
+      else if (result?.data) setError(result.data.blocking?.length ? `Not ship-ready: ${result.data.blocking.length} claim(s) still need an engineer sign-off.` : 'Not ship-ready: this check is out of date. Re-check the draft first.')
+      else setError(result?.error ?? `Publish failed (${response.status}).`)
+    } catch { setError('Could not reach the server. Try again.') } finally { setBusy(false) }
+  }
   return <>
     <div className="proof-page proof-row">
       <a className="proof-link" href="/drafts">← Drafts</a>
       <Button disabled={busy || version?.data.status === 'checking'} onClick={check}>{version ? 'Re-check claims' : 'Check claims'}</Button>
     </div>
+    {version?.data.status === 'checked' && <form className="proof-page proof-row" onSubmit={event => { event.preventDefault(); void publish() }}>
+      <Input type="url" required aria-label="Published URL" placeholder="https://… where this will be published" value={url} onChange={event => setUrl(event.target.value)} />
+      <Button type="submit" variant="outline" disabled={busy}>Publish</Button>
+    </form>}
     {error && <p role="alert" className="proof-page proof-error">{error}</p>}
     {notice && <p role="status" className="proof-page proof-muted">{notice}</p>}
     {(busy || version?.data.status === 'checking') && <p role="status" aria-live="polite" className="proof-page proof-row" style={{ justifyContent: 'flex-start', gap: '0.75rem' }}>
