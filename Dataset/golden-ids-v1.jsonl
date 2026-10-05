@@ -1,0 +1,12 @@
+{"id":"i01","op":"normalizeClaim","input":"DeepSpace is fast.","expected":"deepspace is fast","property":"lowercase-and-period"}
+{"id":"i02","op":"normalizeClaim","input":"  DeepSpace   uses\nWorkers!  ","expected":"deepspace uses workers","property":"collapse-whitespace-and-bang"}
+{"id":"i03","op":"normalizeClaim","input":"Claim...;;;!!!","expected":"claim","property":"strip-trailing-punctuation-run"}
+{"id":"i04","op":"normalizeClaim","input":"Price is $3/month","expected":"price is $3/month","property":"preserve-internal-symbols"}
+{"id":"i05","op":"normalizeClaim","input":"A.B stays internal.","expected":"a.b stays internal","property":"preserve-internal-period"}
+{"id":"i06","op":"normalizeClaim","input":"already normalized","expected":"already normalized","property":"idempotent-basic"}
+{"id":"i07","op":"normalizeClaim","input":"TRAILING COLON:   ","expected":"trailing colon","property":"strip-colon-and-exposed-space"}
+{"id":"i08","op":"normalizeClaim","input":"Question?","expected":"question?","property":"question-mark-is-not-stripped"}
+{"id":"i09","op":"normalizeClaim","input":"Unicode Café!","expected":"unicode café","property":"unicode-lowercase"}
+{"id":"i10","op":"normalizeClaim","input":"‘Quoted’ claim.","expected":"‘quoted’ claim","property":"smart-quotes-preserved-by-normalizeClaim"}
+{"id":"i11","op":"normalizeClaim","input":"A\tB\r\nC,","expected":"a b c","property":"mixed-whitespace"}
+{"id":"i12","op":"normalizeClaim","input":"!!!","expected":"","property":"punctuation-only-normalizes-empty"}
