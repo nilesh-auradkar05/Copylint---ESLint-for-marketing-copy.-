@@ -84,7 +84,7 @@ export async function verifyDraft(
     if (payload.mode === 'reverify') throw new Error('verify-draft mode "reverify" is not implemented (T-020)')
 
     ctx.signal.throwIfAborted()
-    ctx.progress(0, 'extracting claims')
+    ctx.progress(0, 'Reading the draft for claims')
     const { claims, dropped } = await extractClaims({ generate: deps.generate, signal: ctx.signal }, version.body)
 
     // A retry never judges (or pays for) a claim that an earlier attempt already stored.
@@ -125,6 +125,8 @@ export async function verifyDraft(
     const worker = async (): Promise<void> => {
       while (!failed && next < queue.length) {
         const claim = queue[next++]
+        // Shown live on the draft page; up to `judgeConcurrency` claims are in flight, the latest one started wins.
+        ctx.progress(finished / total, `Checking: ${claim.text}`)
         try {
           await judgeAndWrite(claim)
         } catch (err) {
@@ -132,7 +134,7 @@ export async function verifyDraft(
           throw err
         }
         finished += 1
-        ctx.progress(finished / total, `judged ${finished}/${total}`)
+        ctx.progress(finished / total, `Checked ${finished} of ${total} claims`)
       }
     }
     // Drain every worker before moving on, so no in-flight write lands after the job has failed.
@@ -140,7 +142,7 @@ export async function verifyDraft(
       Array.from({ length: Math.min(CONFIG.limits.judgeConcurrency, queue.length) }, worker),
     )
     for (const s of settled) if (s.status === 'rejected') throw s.reason
-    if (queue.length === 0) ctx.progress(1, `judged ${total}/${total}`)
+    if (queue.length === 0) ctx.progress(1, `Checked ${total} of ${total} claims`)
 
     const summary = tally(await storedClaims(records, versionId))
     // `checked` is the last write: once it lands, the catch below can no longer fail the version.

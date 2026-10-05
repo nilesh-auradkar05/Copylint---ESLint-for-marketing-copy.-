@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getAuthToken, useQuery } from 'deepspace'
+import { getAuthToken, useJobs, useQuery } from 'deepspace'
 import { ReviewRoom } from '@/components/ReviewRoom'
 import type { DraftInput } from '@/components/DraftForm'
 import { Button } from '@/components/ui/Button'
 import type { Claim, Signoff, Version } from '@/engine/contracts'
+import { SCOPE_ID } from '@/constants'
 
 // ponytail: thin live adapter so draft links resolve; T-011b (Lane B) adds useJobs progress and per-status copy.
 export default function DraftPage() {
@@ -14,6 +15,7 @@ export default function DraftPage() {
   const claims = useQuery<Omit<Claim, 'id'>>('claims')
   const signoffs = useQuery<Omit<Signoff, 'id'>>('signoffs')
   const kb = useQuery<{ version: number }>('kb_state')
+  const { jobs } = useJobs(SCOPE_ID)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const queries = [drafts, versions, claims, signoffs, kb]
@@ -26,6 +28,7 @@ export default function DraftPage() {
   // which hid `checking` and `failed` checks entirely.
   const version = versions.records.filter(record => record.data.draftId === id)
     .sort((a, b) => b.data.requestedAt.localeCompare(a.data.requestedAt))[0]
+  const job = jobs.find(candidate => candidate.id === version?.data.jobId)
   const check = async () => {
     setBusy(true); setError('')
     try {
@@ -39,7 +42,11 @@ export default function DraftPage() {
       <Button disabled={busy || version?.data.status === 'checking'} onClick={check}>{version ? 'Re-check claims' : 'Check claims'}</Button>
     </div>
     {error && <p role="alert" className="proof-page proof-error">{error}</p>}
-    <ReviewRoom draft={draft} version={version && { ...version.data, id: version.recordId }} loading={busy}
+    {(busy || version?.data.status === 'checking') && <p role="status" aria-live="polite" className="proof-page proof-row" style={{ justifyContent: 'flex-start', gap: '0.75rem' }}>
+      <span aria-hidden="true" className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" />
+      <span>{job?.progressMessage ?? 'Starting the check…'}{job?.progress != null && ` · ${Math.round(job.progress * 100)}%`}</span>
+    </p>}
+    <ReviewRoom draft={draft} version={version && { ...version.data, id: version.recordId }} loading={busy && !version}
       claims={claims.records.map(record => ({ ...record.data, id: record.recordId }))}
       signoffs={signoffs.records.map(record => ({ ...record.data, id: record.recordId }))}
       kbVersion={kb.records.find(record => record.recordId === 'global')?.data.version ?? 0} onRecheck={check} />
