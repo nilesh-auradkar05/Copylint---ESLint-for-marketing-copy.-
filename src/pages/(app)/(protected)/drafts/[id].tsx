@@ -22,7 +22,10 @@ export default function DraftPage() {
   if (drafts.status !== 'ready') return <section className="proof-page" aria-busy="true" role="status"><p>Loading draft…</p></section>
   const draft = drafts.records.find(record => record.recordId === id)
   if (!draft) return <section className="proof-page"><h1>Draft not found</h1><p className="proof-muted">It may have been removed, or you may not have access. <a className="proof-link" href="/drafts">Back to drafts →</a></p></section>
-  const version = versions.records.find(record => record.recordId === draft.data.latestVersionId)
+  // Newest version for this draft, not `latestVersionId`: the job links that only once a check succeeds,
+  // which hid `checking` and `failed` checks entirely.
+  const version = versions.records.filter(record => record.data.draftId === id)
+    .sort((a, b) => b.data.requestedAt.localeCompare(a.data.requestedAt))[0]
   const check = async () => {
     setBusy(true); setError('')
     try {

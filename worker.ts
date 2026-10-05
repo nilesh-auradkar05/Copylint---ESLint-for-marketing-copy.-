@@ -90,7 +90,13 @@ export class AppJobRoom extends JobRoom<Env> {
   }
 
   protected async onJob(job: Job, context: JobContext): Promise<unknown> {
-    return await runJob(job, context, this.env)
+    try {
+      return await runJob(job, context, this.env)
+    } catch (err) {
+      // String form: Workers Logs drops the message of a logged Error object. Without this a failed job is silent.
+      console.error(`[job ${job.type}] attempt ${job.attempts}/${job.maxAttempts} failed: ${String(err)}`)
+      throw err
+    }
   }
 }
 
