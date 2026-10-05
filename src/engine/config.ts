@@ -6,6 +6,7 @@ export const CONFIG = {
     kbLimit: 5,
     judgeConcurrency: 5,
     judgeMaxOutputTokens: 1_200,
+    extractMaxOutputTokens: 8_000,
     excerptChars: 300,
     checksPerUserPerDay: 20,
   },
