@@ -18,9 +18,9 @@ export function DraftList({ drafts, ready, onCreate, versions = [], claims = [],
   const [saved, setSaved] = useState(false)
   function badge(draft: DraftRow) {
     if (!dataReady) return '… LOADING'
+    if (versions.some(v => v.draftId === draft.recordId && v.body === draft.data.body && v.kbVersion === kbVersion && v.status === 'checking')) return '◌ CHECKING'
     const version = versions.find(v => v.id === draft.data.latestVersionId && v.draftId === draft.recordId && v.body === draft.data.body)
     if (!version) return '○ DRAFT'
-    if (version.status === 'checking') return '◌ CHECKING'
     if (version.status !== 'checked') return '○ DRAFT'
     const currentPublications = publications.filter(p => p.data.draftId === draft.recordId && p.data.versionId === version.id)
     if (currentPublications.some(p => p.data.status === 'stale') || (kbVersion !== undefined && version.kbVersion !== kbVersion)) return '! STALE'
