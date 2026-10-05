@@ -3,7 +3,7 @@
  * so the judge can cite them and `validateCitations` can check the ids.
  */
 
-import type { KnowledgeSearchOptions, ScopedKnowledgeClient } from 'deepspace/worker'
+import type { KnowledgeClient } from 'deepspace/worker'
 import { CONFIG } from './config'
 
 const SUFFIX = '.md'
@@ -27,16 +27,15 @@ export interface RetrievedChunk {
 }
 
 export async function retrieve(
-  kb: Pick<ScopedKnowledgeClient, 'search'>,
+  kb: Pick<KnowledgeClient, 'search'>,
   claimText: string,
 ): Promise<{ chunks: RetrievedChunk[] }> {
   // The folder is passed explicitly: callers hand in the unscoped client, whose options include it.
-  const options: KnowledgeSearchOptions = {
+  const result = await kb.search(claimText.slice(0, CONFIG.kb.maxQueryChars), {
     folder: CONFIG.kb.folder,
     mode: CONFIG.kb.mode,
     limit: CONFIG.limits.kbLimit,
-  }
-  const result = await kb.search(claimText.slice(0, CONFIG.kb.maxQueryChars), options)
+  })
   const chunks: RetrievedChunk[] = []
   for (const chunk of result.chunks) {
     const page = chunk.filename === undefined ? null : pageFromFilename(chunk.filename)

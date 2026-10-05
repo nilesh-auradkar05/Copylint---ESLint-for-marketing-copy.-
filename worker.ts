@@ -73,8 +73,10 @@ export class AppJobRoom extends JobRoom<Env> {
     super(state, env, {
       authorizeWrite: async (user) => {
         if (user.userId.startsWith('anon-')) return false
+        // Admin-only (ADR-0005): sync-sources is an owner-billed job type; the check route
+        // (not the job socket) is where members are allowed to enqueue work.
         const role = await resolveAppRole(env, user.userId)
-        return role === 'member' || role === 'admin'
+        return role === 'admin'
       },
     })
   }

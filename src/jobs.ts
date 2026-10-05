@@ -58,7 +58,8 @@ export async function runJob(job: Job, ctx: JobContext, rawEnv: unknown): Promis
           fetch: (input, init) => fetch(input, init),
           kb: knowledge(env),
           // Jobs act as the app owner; RBAC is off for action tools, the server-side job is the boundary.
-          records: createActionTools(env, env.OWNER_USER_ID, env.APP_OWNER_JWT),
+          // callerJwt is '': sync never calls integrations, so the owner JWT is not needed.
+          records: createActionTools(env, env.OWNER_USER_ID, ''),
           signal: ctx.signal,
         },
         payload,
