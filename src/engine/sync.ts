@@ -259,7 +259,11 @@ export async function syncSources(
   } catch (err) {
     // A changed page's new hash is already stored, so the next sync will see it as unchanged:
     // persist the bump now or the change never surfaces as drift. Never mask the original error.
-    if (changedPages.length > 0) await commitVersion().catch(() => undefined)
+    if (changedPages.length > 0) {
+      await commitVersion().catch((e: unknown) =>
+        console.error('[sync-sources] kb_state bump failed after sync error:', String(e)),
+      )
+    }
     throw err
   }
 

@@ -78,6 +78,13 @@ export class AppJobRoom extends JobRoom<Env> {
         const role = await resolveAppRole(env, user.userId)
         return role === 'admin'
       },
+      // The SDK defaults authorizeRead to authorizeWrite; members must still watch job
+      // progress read-only via useJobs (ADR-0005).
+      authorizeRead: async (user) => {
+        if (user.userId.startsWith('anon-')) return false
+        const role = await resolveAppRole(env, user.userId)
+        return role === 'member' || role === 'admin'
+      },
     })
   }
 
