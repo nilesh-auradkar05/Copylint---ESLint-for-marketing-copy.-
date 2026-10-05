@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, expect, test, vi } from 'vitest'
+import type { Claim, Signoff, Version } from '../src/engine/contracts'
 
 ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 let root: Root | undefined
@@ -78,6 +79,39 @@ test('[T-010.3] empty state creates the exact launch-thread sample', async () =>
   expect(sampleButton()).toBeTruthy()
   await act(async () => sampleButton().click())
   expect(create).toHaveBeenCalledExactlyOnceWith({ title: 'DeepSpace launch thread', channel: 'thread', body: seed })
+})
+
+const checked: Version = { id: 'v1', draftId: 'd1', body: 'Checked copy', bodyHash: 'hash', kbVersion: 1, status: 'checked', requestedBy: 'writer', requestedAt: '2026-10-04T12:00:00Z', mode: 'full', jobId: 'job' }
+const blocked: Claim = { id: 'c1', draftId: 'd1', versionId: 'v1', claimHash: 'claim', text: 'A technical claim', quote: 'Checked copy', span: [0, 12], kind: 'capability', verdict: 'unsupported', confidence: 'high', evidence: [], reason: 'No evidence' }
+const approve: Signoff = { id: 's1', claimId: 'c1', versionId: 'v1', reviewerId: 'engineer', decision: 'approve', note: 'Verified' }
+test.each([
+  { name: 'unchecked draft', version: undefined, body: checked.body, claims: [], signoffs: [], kbVersion: 1, expected: 'DRAFT' },
+  { name: 'current check in progress', version: { ...checked, status: 'checking' }, body: checked.body, claims: [], signoffs: [], kbVersion: 1, expected: 'CHECKING' },
+  { name: 'checked zero claims with unrelated old claims', version: checked, body: checked.body, claims: [{ ...blocked, versionId: 'old' }], signoffs: [], kbVersion: 1, expected: 'SHIP-READY' },
+  { name: 'unapproved claim', version: checked, body: checked.body, claims: [blocked], signoffs: [], kbVersion: 1, expected: 'BLOCKED 1' },
+  { name: 'current approval', version: checked, body: checked.body, claims: [blocked], signoffs: [approve], kbVersion: 1, expected: 'SHIP-READY' },
+  { name: 'foreign version approval', version: checked, body: checked.body, claims: [blocked], signoffs: [{ ...approve, versionId: 'old' }], kbVersion: 1, expected: 'BLOCKED 1' },
+  { name: 'cut requires an edit', version: checked, body: checked.body, claims: [blocked], signoffs: [{ ...approve, decision: 'cut' }], kbVersion: 1, expected: 'BLOCKED 1' },
+  { name: 'edited current body', version: checked, body: 'New unchecked copy', claims: [], signoffs: [], kbVersion: 1, expected: 'DRAFT' },
+  { name: 'changed docs', version: checked, body: checked.body, claims: [], signoffs: [], kbVersion: 2, expected: 'STALE' },
+] as const)('[T-010b] list badge derives from current snapshot: $name', async ({ version, body, claims, signoffs, kbVersion, expected }) => {
+  const DraftList = await load('components/DraftList.tsx', 'DraftList')
+  await render(<DraftList ready drafts={[{ recordId: 'd1', updatedAt: checked.requestedAt, data: { title: 'Launch', channel: 'thread', body, latestVersionId: version?.id } }]} onCreate={vi.fn()} versions={version ? [version] : []} claims={claims} signoffs={signoffs} kbVersion={kbVersion} />)
+  expect(document.querySelector('.proof-verdict')?.textContent).toContain(expected)
+})
+test.each([
+  { status: 'live', versionId: 'v1', expected: 'PUBLISHED' },
+  { status: 'stale', versionId: 'v1', expected: 'STALE' },
+  { status: 'live', versionId: 'old', expected: 'SHIP-READY' },
+] as const)('[T-010b] publication badge scopes $status publication to $versionId', async ({ status, versionId, expected }) => {
+  const DraftList = await load('components/DraftList.tsx', 'DraftList')
+  await render(<DraftList ready drafts={[{ recordId: 'd1', updatedAt: checked.requestedAt, data: { title: 'Launch', channel: 'thread', body: checked.body, latestVersionId: 'v1' } }]} onCreate={vi.fn()} versions={[checked]} claims={[]} signoffs={[]} kbVersion={1} publications={[{ recordId: 'p1', data: { draftId: 'd1', versionId, status } }]} />)
+  expect(document.querySelector('.proof-verdict')?.textContent).toContain(expected)
+})
+test('[T-010b] unresolved evidence queries never show ship-ready', async () => {
+  const DraftList = await load('components/DraftList.tsx', 'DraftList')
+  await render(<DraftList ready dataReady={false} drafts={[{ recordId: 'd1', updatedAt: checked.requestedAt, data: { title: 'Launch', channel: 'thread', body: checked.body, latestVersionId: 'v1' } }]} onCreate={vi.fn()} versions={[checked]} claims={[]} signoffs={[]} kbVersion={1} />)
+  expect(document.querySelector('.proof-verdict')?.textContent).not.toContain('SHIP-READY')
 })
 
 test('[T-010.4] create and sample controls stay disabled until mutation readiness', async () => {

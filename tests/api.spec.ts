@@ -1,4 +1,83 @@
 import { test, expect, loadAllTestAccounts } from 'deepspace/testing'
+import type { Page } from '@playwright/test'
+import { readFileSync } from 'node:fs'
+import { CONFIG } from '../src/engine/config'
+
+async function draftProbe(page: Page) {
+  await page.goto('/home')
+  await page.addScriptTag({ type: 'module', url: '/tests/helpers/draft-probe.tsx' })
+  await expect.poll(() => page.evaluate(() => window.draftProbe?.ready && window.draftProbe.status === 'ready')).toBe(true)
+}
+
+test.describe('T-010b live drafts', () => {
+  test('[T-010.2] anonymous visitors cannot mount either protected draft view', async ({ page }) => {
+    for (const path of ['/drafts', '/drafts/new']) {
+      await page.goto(path)
+      await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: /^(Drafts|New draft)$/ })).toHaveCount(0)
+      await expect(page.getByLabel('Body', { exact: true })).toHaveCount(0)
+    }
+  })
+
+  test.describe('signed-in persistence', () => {
+    test.skip(loadAllTestAccounts().length < 2, 'Requires two usable SDK test accounts; no credentials belong in the spec.')
+
+    test('[T-010.2] member creates a validated persistent draft; another member cannot read it', async ({ users }) => {
+      const [writer, other] = await users(2)
+      const observer = await writer.context.newPage()
+      await draftProbe(observer)
+      const before = await observer.evaluate(() => window.draftProbe!.records.map(r => r.recordId))
+      const title = `__test-${Date.now()}__ Launch`
+      try {
+        await writer.page.goto('/home')
+        await expect(writer.page.getByRole('link', { name: 'Drafts', exact: true })).toBeVisible()
+        await writer.page.getByRole('link', { name: 'Drafts', exact: true }).click()
+        await expect(writer.page).toHaveURL(/\/drafts$/)
+        await writer.page.getByRole('link', { name: /New draft/ }).click()
+        await expect(writer.page).toHaveURL(/\/drafts\/new$/)
+        await writer.page.getByLabel('Body', { exact: true }).fill('abc')
+        await expect(writer.page.getByText(/3\s*\/\s*20,?000/)).toBeVisible()
+        await writer.page.getByRole('button', { name: /Create draft/ }).click()
+        expect(await observer.evaluate(() => window.draftProbe!.records.map(r => r.recordId))).toEqual(before)
+        await writer.page.getByLabel('Title', { exact: true }).fill(title)
+        await writer.page.getByLabel('Body', { exact: true }).fill('x'.repeat(CONFIG.limits.maxBodyChars))
+        await writer.page.getByRole('button', { name: /Create draft/ }).click()
+        await expect.poll(() => observer.evaluate(t => window.draftProbe!.records.find(r => r.data.title === t)?.data.body, title)).toBe('x'.repeat(CONFIG.limits.maxBodyChars))
+        await writer.page.goto('/drafts')
+        await expect(writer.page.getByRole('link', { name: title, exact: true })).toBeVisible()
+        await writer.page.reload()
+        await expect(writer.page.getByRole('link', { name: title, exact: true })).toBeVisible()
+        await other.page.goto('/drafts')
+        await expect(other.page.getByRole('heading', { name: 'Drafts', exact: true })).toBeVisible()
+        await expect(other.page.getByRole('link', { name: title, exact: true })).toHaveCount(0)
+      } finally {
+        await observer.evaluate(async t => { for (const r of window.draftProbe!.records.filter(r => r.data.title === t)) await window.draftProbe!.remove(r.recordId) }, title)
+        await observer.close()
+      }
+    })
+
+    test('[T-010.3] empty list sample persists the exact seed body and thread channel', async ({ users }) => {
+      const [writer] = await users(1)
+      const observer = await writer.context.newPage()
+      await draftProbe(observer)
+      const before = await observer.evaluate(() => window.draftProbe!.records.map(r => r.recordId))
+      try {
+        await writer.page.goto('/drafts')
+        await expect(writer.page.getByRole('button', { name: 'Create from sample', exact: true })).toBeVisible()
+        await writer.page.getByRole('button', { name: 'Create from sample', exact: true }).click()
+        await expect.poll(() => observer.evaluate(ids => window.draftProbe!.records.filter(r => !ids.includes(r.recordId)).map(r => r.data), before)).toEqual([
+          expect.objectContaining({ title: 'DeepSpace launch thread', channel: 'thread', body: readFileSync('seed/launch-thread.md', 'utf8') }),
+        ])
+        await writer.page.reload()
+        await expect(writer.page.getByRole('link', { name: 'DeepSpace launch thread', exact: true })).toBeVisible()
+      } finally {
+        // The product fixes the sample title; track IDs so cleanup never removes pre-existing data.
+        await observer.evaluate(async ids => { for (const r of window.draftProbe!.records.filter(r => !ids.includes(r.recordId))) await window.draftProbe!.remove(r.recordId) }, before)
+        await observer.close()
+      }
+    })
+  })
+})
 
 test.describe('API tests', () => {
   test('auth proxy forwards to auth worker', async ({ request }) => {
