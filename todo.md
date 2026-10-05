@@ -23,6 +23,14 @@ Update at the start and end of every session. Keep it under one screen.
 
 ## Waiting on the human, after first deploy (T-004)
 - T-004.1 `[[ai_search]]` provisions; `npx deepspace app usage` before/after the first sync
+    - Requests: 405, Errors: 0, Subrequests: 485, CPU p50/p99: 20947.0 ms
+    - Plan:     free
+      Credits:  487 of 500 remaining (100 credits = $1)
+
+      Usage by integration (last 30 days):
+      INTEGRATION  CALLS  COST
+      anthropic    30     $0.12
+
 - T-004.2 click *Sync now* as owner: 25 sources `completed`, `kb_state.version` 1; second sync = 0 adds
 - T-004.6 run `eval/probes.json`, log hit-rate. Check `chunk.filename` is the bare `concepts__permissions.md`; if it is folder-prefixed, `retrieve` drops every chunk
 - Does a same-name re-upload replace the item or add a second one? Does `kb.remove` of a missing id 404?
