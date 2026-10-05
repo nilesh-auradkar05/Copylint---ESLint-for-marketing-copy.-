@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Hono } from 'hono'
+import { RECORD_NOT_FOUND } from 'deepspace/worker'
 import type { ActionResult } from 'deepspace/worker'
 import type { AppContext, Env } from '../../worker'
 import { CONFIG } from '../engine/config'
@@ -21,11 +22,18 @@ const ROLES: Record<string, string> = { [OWNER]: 'member', [COLLAB]: 'member', [
 type Data = Record<string, unknown>
 type Tools = ReturnType<CheckRouteDeps['records']>
 
-/** In-memory ActionTools subset. `create` on a known id upserts (merges), as the platform does. Default query limit is 50. */
+/**
+ * In-memory ActionTools subset. `create` on a known id upserts (merges), as the platform does. A missing `get` returns the
+ * platform's exact RECORD_NOT_FOUND string. `query` without `limit` is unbounded (ActionTools applies no default).
+ */
 class FakeRecords {
   readonly store = new Map<string, Map<string, { data: Data; createdBy: string }>>()
   log: string[] = []
   failCreate = false
+  /** Every create/update after this is set fails (`fail`) or throws (`throw`). */
+  writeMode: 'fail' | 'throw' | null = null
+  /** `${collection}/${id}` -> error string returned by get for that row (infrastructure failure). */
+  getErrors = new Map<string, string>()
   private col(c: string) {
     let m = this.store.get(c)
     if (!m) this.store.set(c, (m = new Map()))
@@ -46,7 +54,9 @@ class FakeRecords {
   }
   get = (async (c: string, id: string) => {
     this.log.push(`get:${c}`)
-    return this.col(c).has(id) ? { success: true, data: { record: this.env(c, id) } } : { success: false, error: 'Record not found' }
+    const infra = this.getErrors.get(`${c}/${id}`)
+    if (infra) return { success: false, error: infra }
+    return this.col(c).has(id) ? { success: true, data: { record: this.env(c, id) } } : { success: false, error: RECORD_NOT_FOUND }
   }) as unknown as Tools['get']
   query = (async (c: string, o?: { where?: Data; orderBy?: string; orderDir?: 'asc' | 'desc'; limit?: number }) => {
     this.log.push(`query:${c}`)
@@ -56,11 +66,13 @@ class FakeRecords {
       const dir = o.orderDir === 'desc' ? -1 : 1
       ids = ids.sort((a, b) => dir * String(this.col(c).get(a)!.data[key]).localeCompare(String(this.col(c).get(b)!.data[key])))
     }
-    ids = ids.slice(0, o?.limit ?? 50)
+    ids = ids.slice(0, o?.limit)
     return { success: true, data: { records: ids.map((id) => this.env(c, id)), count: ids.length } }
   }) as unknown as Tools['query']
   create = (async (c: string, data: Data, id?: string): Promise<ActionResult<{ recordId: string }>> => {
     this.log.push(`create:${c}`)
+    if (this.writeMode === 'throw') throw new Error('storage exploded')
+    if (this.writeMode === 'fail') return { success: false, error: 'disk on fire' }
     if (this.failCreate) return { success: false, error: 'disk on fire' }
     const recordId = id ?? `gen-${this.col(c).size + 1}`
     const prev = this.col(c).get(recordId)
@@ -69,6 +81,8 @@ class FakeRecords {
   }) as unknown as Tools['create']
   update = (async (c: string, id: string, patch: Data): Promise<ActionResult<{ recordId: string }>> => {
     this.log.push(`update:${c}`)
+    if (this.writeMode === 'throw') throw new Error('storage exploded')
+    if (this.writeMode === 'fail') return { success: false, error: 'disk on fire' }
     const r = this.col(c).get(id)
     if (!r) return { success: false, error: 'Record not found' }
     r.data = { ...r.data, ...patch }
@@ -81,9 +95,12 @@ let records: FakeRecords
 let enqueue: ReturnType<typeof vi.fn<CheckRouteDeps['enqueue']>>
 let atEnqueue: Snapshot[]
 let enqueueError: Error | null
+let failedWriteMode: FakeRecords['writeMode']
 let auth: { userId: string } | null
 let resolveRole: ReturnType<typeof vi.fn<CheckRouteDeps['resolveRole']>>
 let app: Hono<AppContext>
+let clock: Date
+const ago = (ms: number) => new Date(NOW.getTime() - ms).toISOString()
 
 const vid = (body = BODY, kb = 0) => deriveVersionId('d1', body, kb)
 const draft = (over: Data = {}) => ({ title: 't', channel: 'blog', body: BODY, collaborators: [COLLAB], latestVersionId: '', ...over })
@@ -99,13 +116,18 @@ beforeEach(() => {
   records.seed('drafts', 'd1', draft(), OWNER)
   atEnqueue = []
   enqueueError = null
+  failedWriteMode = null
+  clock = NOW
   auth = { userId: OWNER }
   resolveRole = vi.fn<CheckRouteDeps['resolveRole']>(async (_e, u) => ROLES[u] ?? null)
   enqueue = vi.fn<CheckRouteDeps['enqueue']>(async (_env, _type, payload) => {
     const v = records.row('draft_versions', (payload as { versionId: string }).versionId)
     atEnqueue.push({ status: v?.status, jobId: v?.jobId, body: v?.body })
     records.log.push('enqueue')
-    if (enqueueError) throw enqueueError
+    if (enqueueError) {
+      records.writeMode = failedWriteMode
+      throw enqueueError
+    }
     return `job-${enqueue.mock.calls.length}`
   })
   app = new Hono<AppContext>()
@@ -114,7 +136,7 @@ beforeEach(() => {
     resolveRole,
     records: () => records as unknown as Tools,
     enqueue,
-    now: () => NOW,
+    now: () => clock,
   })
 })
 
@@ -214,8 +236,8 @@ describe('quota (T-006.2)', () => {
     expect((await post()).status).toBe(202)
   })
 
-  it('[T-006.2] the quota counts the caller by requestedBy, and the check is not defeated by a long history (default query page is 50)', async () => {
-    priorChecks(60, OWNER, 3 * DAY) // old rows fill the default page if the newest are not asked for first
+  it('[T-006.2] a long history does not hide recent checks: the newest rows must be fetched first when the query is limited', async () => {
+    priorChecks(60, OWNER, 3 * DAY) // oldest-first insertion order: a limited query without newest-first ordering sees only these
     priorChecks(limit, OWNER, 1000)
     const res = await post()
     expect(res.status).toBe(429)
@@ -284,16 +306,85 @@ describe('idempotency (T-006.3)', () => {
 
   it('[T-006.3] a failed version is re-run: it goes back to checking with a new job, and the quota still applies to it', async () => {
     const id = await vid(BODY, 3)
-    records.seed('draft_versions', id, row('failed', { jobId: 'job-dead' }))
+    records.seed('draft_versions', id, row('failed', { jobId: 'job-dead', requestedAt: ago(CONFIG.job.failedRetryCooldownMs + 1) }))
     const res = await post()
     expect(res.status).toBe(202)
     expect(await res.json()).toEqual({ jobId: 'job-1', versionId: id })
     expect(records.row('draft_versions', id)).toMatchObject({ status: 'checking', jobId: 'job-1', body: BODY })
     expect(records.rows('draft_versions')).toHaveLength(1)
 
-    records.seed('draft_versions', id, row('failed'))
+    records.seed('draft_versions', id, row('failed', { requestedAt: ago(CONFIG.job.failedRetryCooldownMs + 1) }))
     priorChecks(CONFIG.limits.checksPerUserPerDay, OWNER, 1000)
     expect((await post()).status).toBe(429)
+  })
+})
+
+describe('stale checking, failed cooldown, infrastructure errors', () => {
+  const row = (status: string, over: Data = {}) => ({ draftId: 'd1', body: BODY, bodyHash: 'h', kbVersion: 0, status, requestedBy: OWNER, requestedAt: NOW.toISOString(), mode: 'full', jobId: 'job-existing', ...over })
+  const staleAt = () => ago(CONFIG.job.checkingStaleMs + 1) // lazy: a missing tunable fails the test, not collection
+
+  it.each([['older than checkingStaleMs', () => ({ requestedAt: staleAt() })], ['missing requestedAt', () => ({ requestedAt: undefined })], ['unparseable requestedAt', () => ({ requestedAt: 'garbage' })]])(
+    '[T-006.3] a checking version with %s is no longer treated as running: it re-runs with a fresh requestedAt and the new jobId',
+    async (_name, mkOver) => {
+      const id = await vid(BODY, 0)
+      records.seed('draft_versions', id, row('checking', mkOver()))
+      const res = await post()
+      expect(res.status).toBe(202)
+      expect(await res.json()).toEqual({ jobId: 'job-1', versionId: id })
+      expect(enqueue).toHaveBeenCalledTimes(1)
+      expect(records.rows('draft_versions')).toHaveLength(1)
+      expect(records.row('draft_versions', id)).toMatchObject({ status: 'checking', requestedAt: NOW.toISOString(), jobId: 'job-1', body: BODY })
+    },
+  )
+
+  it('[T-006.3] a checking version younger than checkingStaleMs is still returned as running', async () => {
+    const id = await vid(BODY, 0)
+    records.seed('draft_versions', id, row('checking', { requestedAt: ago(CONFIG.job.checkingStaleMs - 1000) }))
+    const res = await post()
+    expect(res.status).toBe(202)
+    expect(await res.json()).toEqual({ versionId: id, jobId: 'job-existing' })
+    expect(enqueue).not.toHaveBeenCalled()
+  })
+
+  it('[T-006.2] a stale checking version goes through the quota check: over quota gets 429 and nothing is written or enqueued', async () => {
+    records.seed('draft_versions', await vid(BODY, 0), row('checking', { requestedAt: staleAt() }))
+    priorChecks(CONFIG.limits.checksPerUserPerDay, OWNER, 1000)
+    expect((await post()).status).toBe(429)
+    noWrites()
+    expect(enqueue).not.toHaveBeenCalled()
+  })
+
+  it('[T-006.2] a failed version inside the retry cooldown gets 429 with nothing written or enqueued; after the cooldown it re-runs', async () => {
+    const id = await vid(BODY, 0)
+    records.seed('draft_versions', id, row('failed', { requestedAt: ago(CONFIG.job.failedRetryCooldownMs - 1000) }))
+    expect((await post()).status).toBe(429)
+    noWrites()
+    expect(enqueue).not.toHaveBeenCalled()
+    expect(records.row('draft_versions', id)?.status).toBe('failed')
+    clock = new Date(NOW.getTime() + 2000)
+    expect((await post()).status).toBe(202)
+    expect(records.row('draft_versions', id)?.status).toBe('checking')
+  })
+
+  it('[T-006.1] the missing-record error is the platform contract string', () => {
+    expect(RECORD_NOT_FOUND).toBe('Record not found')
+  })
+
+  it('[T-006.1] a drafts read that fails for a reason other than not-found is 503, not 404, and nothing is written or enqueued', async () => {
+    records.getErrors.set('drafts/d1', 'Internal error: storage unavailable')
+    const res = await post()
+    expect(res.status).toBe(503)
+    noWrites()
+    expect(enqueue).not.toHaveBeenCalled()
+  })
+
+  it('[T-006.3] a kb_state read that fails for a reason other than not-found is 503 and nothing is written or enqueued', async () => {
+    records.seed('kb_state', 'global', { version: 3 })
+    records.getErrors.set('kb_state/global', 'Internal error: storage unavailable')
+    const res = await post()
+    expect(res.status).toBe(503)
+    noWrites()
+    expect(enqueue).not.toHaveBeenCalled()
   })
 })
 
@@ -347,6 +438,8 @@ describe('what gets enqueued (T-006.4)', () => {
     expect(records.rows('draft_versions').map((v) => v.status)).toEqual(['failed'])
 
     enqueueError = null
+    expect((await post()).status).toBe(429) // inside the failed-retry cooldown
+    clock = new Date(NOW.getTime() + CONFIG.job.failedRetryCooldownMs + 1)
     expect((await post()).status).toBe(202)
     expect(records.rows('draft_versions').map((v) => v.status)).toEqual(['checking'])
   })
@@ -356,5 +449,15 @@ describe('what gets enqueued (T-006.4)', () => {
     const res = await post()
     expect(res.status).toBeGreaterThanOrEqual(400)
     expect(enqueue).not.toHaveBeenCalled()
+  })
+
+  it.each([['fail'], ['throw']] as const)('[T-006.4] if enqueue throws and the failed-status write then %ss, the response is still a JSON 5xx', async (mode) => {
+    enqueueError = new Error('JobRoom down')
+    failedWriteMode = mode
+    const res = await post()
+    expect(res.status).toBeGreaterThanOrEqual(500)
+    expect(res.status).toBeLessThan(600)
+    expect(res.headers.get('content-type') ?? '').toMatch(/json/)
+    expect(typeof (await res.json())).toBe('object')
   })
 })
