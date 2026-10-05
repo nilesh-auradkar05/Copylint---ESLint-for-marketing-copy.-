@@ -5,7 +5,7 @@ Canonical rules for **every** coding agent on this repo (Claude Code, Codex, Cur
 
 ## 0. What we are building (one paragraph)
 
-Groundtruth is a DeepSpace app (`groundtruth.app.space`) that checks the **technical claims** in developer
+Groundtruth is a DeepSpace app (`copylint.app.space`) that checks the **technical claims** in developer
 marketing content against a **curated, versioned set of DeepSpace docs pages**.
 1. A writer pastes a draft.
 2. A background job extracts atomic claims and retrieves evidence from managed knowledge.
