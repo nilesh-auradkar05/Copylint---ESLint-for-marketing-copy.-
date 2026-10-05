@@ -32,9 +32,9 @@ Diagrams: `docs/diagrams/*.png`.
 | Role | Claude Code | Codex | May edit | Must not |
 |---|---|---|---|---|
 | **Orchestrator** | main session, `claude-opus-5-5`, effort high | main session, `gpt-6-astra`, reasoning high | `TASKS.md`, `todo.md`, `docs/sprint-review.md`, merges | write feature code beyond small integration glue |
-| **test-author** | subagent `test-author` (`claude-sonnet-5-5`, high) | agent `test_author` (`gpt-6.1-sol`, high) | `tests/**`, `**/*.test.ts`, `eval/**` | touch `src/**`, `worker.ts`, `wrangler.toml` |
-| **implementer** | subagent `implementer` (`claude-sonnet-5-5`, high) | agent `implementer` (`gpt-6.1-sol`, high) | `src/**`, `worker.ts`, `wrangler.toml`, `package.json` | edit any test file or eval label |
-| **reviewer** | subagent `reviewer` (`claude-sonnet-5-5`, high), read-only | agent `reviewer` (`gpt-6.1-sol`, high), read-only | nothing (writes findings to its reply) | change code |
+| **test-author** | subagent `test-author` (`claude-sonnet-5-5`, high) | agent `test_author` (`gpt-6.1-sol`, medium) | `tests/**`, `**/*.test.ts`, `eval/**` | touch `src/**`, `worker.ts`, `wrangler.toml` |
+| **implementer** | subagent `implementer` (`claude-sonnet-5-5`, high) | agent `implementer` (`gpt-6.1-sol`, medium) | `src/**`, `worker.ts`, `wrangler.toml`, `package.json` | edit any test file or eval label |
+| **reviewer** | subagent `reviewer` (`claude-sonnet-5-5`, high), read-only | agent `reviewer` (`gpt-6.1-sol`, medium), read-only | nothing (writes findings to its reply) | change code |
 
 **Codex note:** Codex spawns subagents only when asked or when instructions request it.
 **This file requests it:** the Codex orchestrator MUST delegate every task through the loop in §3.

@@ -1,0 +1,43 @@
+{
+  "dataset": "CopyLint Golden Dataset v2",
+  "generated_on": "2026-10-05",
+  "purpose": "Golden data for judge quality, extraction robustness, citation guard, span logic, retrieval, and docs-drift carry-forward.",
+  "corpus_contract": "Labels mean what the curated DeepSpace source-page corpus supports, not what may be true elsewhere.",
+  "claim_rows": 122,
+  "claim_distribution": {
+    "supported": 49,
+    "contradicted": 49,
+    "unsupported": 24
+  },
+  "claim_suite_distribution": {
+    "core": {
+      "supported": 24,
+      "contradicted": 24,
+      "unsupported": 12
+    },
+    "edge": {
+      "supported": 25,
+      "contradicted": 25,
+      "unsupported": 12
+    }
+  },
+  "draft_rows": 24,
+  "citation_guard_rows": 12,
+  "span_rows": 16,
+  "reverify_rows": 8,
+  "retrieval_probe_rows": 20,
+  "files": [
+    "golden-claims-v2.jsonl",
+    "golden-drafts-v1.jsonl",
+    "golden-citation-guard-v1.jsonl",
+    "golden-spans-v1.jsonl",
+    "golden-gate-v1.jsonl",
+    "golden-ids-v1.jsonl",
+    "golden-reverify-v1.jsonl",
+    "retrieval-probes-v2.json",
+    "README_GOLDEN_DATASET.md",
+    "SHA256SUMS.txt"
+  ],
+  "gate_rows": 14,
+  "id_normalization_rows": 12
+}
