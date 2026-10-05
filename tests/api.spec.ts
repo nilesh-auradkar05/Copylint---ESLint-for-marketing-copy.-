@@ -152,3 +152,34 @@ test.describe('RBAC matrix (live)', () => {
     // (SPEC §11 note 5); a different admin cannot update or delete it.
   })
 })
+
+/**
+ * T-004.5 live check of POST /api/admin/sync (SPEC §8, AGENTS.md §6 "paid triggers").
+ *
+ * The role and body-handling matrix is proven without a server by `src/server/admin-routes.test.ts`
+ * (Vitest, real Hono app, JWT/role/JobRoom faked). These cover the live wiring only.
+ * The anonymous case is real: it is rejected before anything is enqueued, so it costs nothing.
+ * Member and admin cases stay `fixme` until a signed-in API caller and an admin test user exist.
+ * Never run the admin case in a loop: a 202 starts a real, billed sync job.
+ */
+test.describe('POST /api/admin/sync (live)', () => {
+  test('[T-004.5] anonymous caller gets 401', async ({ request }) => {
+    const res = await request.post('/api/admin/sync', { data: {} })
+    expect(res.status()).toBe(401)
+  })
+
+  test.fixme('[T-004.5] a signed-in member gets 403', async ({ users }) => {
+    // Plan: sign in one password test account (member), POST /api/admin/sync with the session's
+    // bearer token, expect 403 and no job enqueued. Blocked: the `users` fixture exposes a browser
+    // page, and the route authenticates with a bearer JWT; extracting that token from the page
+    // session is not documented. Do not hand-roll a token.
+    const [a] = await users(1)
+    void a
+  })
+
+  test.fixme('[T-004.5] an admin gets 202 with a jobId', async () => {
+    test.fixme(true, 'no admin test user (SPEC §11 correction 8)')
+    // Plan once an admin exists: POST /api/admin/sync, expect 202 and a string `jobId`.
+    // This starts one real sync job (25 docs fetches plus knowledge uploads): run it once per run.
+  })
+})
