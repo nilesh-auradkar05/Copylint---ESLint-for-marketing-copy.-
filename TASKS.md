@@ -9,7 +9,7 @@
 | ID | Title | Lane | Sprint | Deps | Timebox | Status |
 |---|---|---|---|---|---|---|
 | T-001 | Repo, scaffold, GitHub source, first deploy | Human + A | S0 | – | 1.5 h | IN_PROGRESS (scaffold, GitHub remote, login, app id done; first deploy + `app source` check pending) |
-| T-002 | Schemas + RBAC (7 collections) | A | S1 | T-001 | 1.5 h | REVIEW (merged; reviewer APPROVE; live RBAC matrix not yet run) |
+| T-002 | Schemas + RBAC (7 collections) | A | S1 | T-001 | 1.5 h | DONE (live RBAC matrix 28/28 on local server; deployed-app smoke pending) |
 | T-003 | Engine contracts: ids, spans, gate, citations | A | S1 | T-001 | 1.5 h | DONE |
 | T-004 | Knowledge binding + `sync-sources` job + probes | A | S1 | T-002 | 2 h | REVIEW (merged to lane-a; reviewer APPROVE; live checks .1/.2/.5/.6 need first deploy + human) |
 | T-005 | `verify-draft` job (extract → retrieve → judge → write) | A | S1 | T-003, T-004 | 3 h | READY |
