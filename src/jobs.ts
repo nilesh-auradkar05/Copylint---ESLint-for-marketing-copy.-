@@ -39,12 +39,44 @@
  *   }
  */
 
-import { knowledge } from 'deepspace/worker'
+import { Output, NoObjectGeneratedError, generateText } from 'ai'
+import { createDeepSpaceAI, knowledge } from 'deepspace/worker'
 import type { Job, JobContext } from 'deepspace/worker'
 import { SyncJobPayload } from './engine/contracts'
 import { syncSources } from './engine/sync'
+import { verifyDraft } from './engine/verify'
+import type { GenerateFn } from './engine/verify'
 import { createActionTools } from './server/action-routes'
 import type { Env } from '../worker'
+
+/**
+ * Real model boundary for `verify-draft`. Owner-pays (no authToken). When the SDK could not produce a
+ * valid object it hands back the raw text instead of throwing, so the engine's zod repair path decides;
+ * aborts and network errors are rethrown untouched.
+ */
+function makeGenerate(env: Env): GenerateFn {
+  const anthropic = createDeepSpaceAI(env, 'anthropic')
+  return async ({ model, system, prompt, schema, maxOutputTokens, abortSignal }) => {
+    try {
+      const result = await generateText({
+        model: anthropic(model),
+        system,
+        prompt,
+        output: Output.object({ schema }),
+        maxOutputTokens,
+        abortSignal,
+      })
+      return result.output
+    } catch (err) {
+      if (!NoObjectGeneratedError.isInstance(err)) throw err
+      try {
+        return JSON.parse(err.text ?? '') as unknown
+      } catch {
+        return err.text
+      }
+    }
+  }
+}
 
 // `env` is `unknown` at this boundary (AppJobRoom hands over its Env); handlers narrow it when needed.
 export async function runJob(job: Job, ctx: JobContext, rawEnv: unknown): Promise<unknown> {
@@ -63,6 +95,19 @@ export async function runJob(job: Job, ctx: JobContext, rawEnv: unknown): Promis
           signal: ctx.signal,
         },
         payload,
+      )
+    }
+    case 'verify-draft': {
+      const env = rawEnv as Env
+      return await verifyDraft(
+        {
+          generate: makeGenerate(env),
+          kb: knowledge(env),
+          // Jobs act as the app owner; RBAC is off for action tools, the server-side job is the boundary.
+          records: createActionTools(env, env.OWNER_USER_ID, ''),
+        },
+        { id: job.id, payload: job.payload, attempts: job.attempts, maxAttempts: job.maxAttempts },
+        ctx,
       )
     }
     default:

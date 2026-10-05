@@ -96,3 +96,15 @@ export type Signoff = {
 /** Payload of the `sync-sources` job (enqueued by the admin route and the drift cron). */
 export const SyncJobPayload = z.object({ reverify: z.boolean().optional() }).strict()
 export type SyncJobPayload = z.infer<typeof SyncJobPayload>
+
+/** Payload of the `verify-draft` job. No draft text: the body is read from the frozen version row. */
+export const VerifyJobPayload = z
+  .object({
+    draftId: z.string(),
+    versionId: z.string(),
+    mode: z.enum(['full', 'reverify']),
+    previousVersionId: z.string().optional(),
+    changedPages: z.array(z.string()).optional(),
+  })
+  .strict()
+export type VerifyJobPayload = z.infer<typeof VerifyJobPayload>
