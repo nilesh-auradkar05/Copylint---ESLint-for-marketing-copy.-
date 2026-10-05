@@ -11,6 +11,7 @@ import {
   armCronRoom,
   CanvasRoom,
   CronRoom,
+  enqueueJob,
   JobRoom,
   PresenceRoom,
   RecordRoom,
@@ -26,6 +27,7 @@ import { tasks as cronTasks, runTask as runCronTask } from './src/cron.js'
 import { runJob } from './src/jobs.js'
 import { schemas } from './src/schemas.js'
 import { registerActionRoutes } from './src/server/action-routes.js'
+import { registerAdminRoutes } from './src/server/admin-routes.js'
 import {
   registerAuthAndIntegrationRoutes,
   registerPlatformProxyRoutes,
@@ -70,6 +72,15 @@ export class AppJobRoom extends JobRoom<Env> {
   constructor(state: DurableObjectState, env: Env) {
     super(state, env, {
       authorizeWrite: async (user) => {
+        if (user.userId.startsWith('anon-')) return false
+        // Admin-only (ADR-0005): sync-sources is an owner-billed job type; the check route
+        // (not the job socket) is where members are allowed to enqueue work.
+        const role = await resolveAppRole(env, user.userId)
+        return role === 'admin'
+      },
+      // The SDK defaults authorizeRead to authorizeWrite; members must still watch job
+      // progress read-only via useJobs (ADR-0005).
+      authorizeRead: async (user) => {
         if (user.userId.startsWith('anon-')) return false
         const role = await resolveAppRole(env, user.userId)
         return role === 'member' || role === 'admin'
@@ -137,6 +148,12 @@ app.use('*', async (c, next) => {
 registerAuthAndIntegrationRoutes(app)
 registerRealtimeRoutes(app)
 registerActionRoutes(app, resolveAuth)
+registerAdminRoutes(app, {
+  resolveAuth,
+  resolveRole: resolveAppRole,
+  enqueue: (env, type, payload, options) =>
+    enqueueJob(env.JOB_ROOMS, `app:${env.DEEPSPACE_APP_ID}`, type, payload, options),
+})
 // The in-app assistant stores chat history in `ai-chats` / `ai-messages`,
 // which only the copilot overlay declares. When present, registerAgent enables
 // both that website AI and the user's local Codex/Claude/etc. assistant.

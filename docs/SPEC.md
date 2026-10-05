@@ -317,6 +317,13 @@ has no scaffold yet; re-confirm the version once T-001 lands). Corrections to ea
    documented way to get an **admin** test user; T-002.5 and T-004.5 need a human decision before their tests can run.
 9. **Knowledge binding.** `knowledge(env)` needs `DEEPSPACE_APP_ID` and `APP_IDENTITY_TOKEN`; the token is "absent until the app's
    first deploy injects it", so knowledge calls may not work under `dev start` before T-001's deploy.
+10. **`[[ai_search]]` in local dev.** With the block uncommented, `@cloudflare/vite-plugin` opens a remote proxy session and the dev
+    server (and `npx deepspace test run`) fails with "CLOUDFLARE_API_TOKEN ... necessary". `vite.config.ts` therefore uses
+    `cloudflare({ remoteBindings: false })`. `knowledge(env)` goes through the API worker, not the binding, so nothing is lost.
+11. **`JobRoom` read access.** `authorizeRead` defaults to `authorizeWrite`. Admin-only writes (§5) need an explicit
+    `authorizeRead` for members, or `useJobs` shows them nothing.
+12. **`kb.list` paging.** `perPage` is capped at 50; `sync.ts` paginates. `kb.add` returns several items for a text file over 4 MiB
+    (`name.part-N.md`); `sync.ts` assumes exactly one item per page (§10: our pages are far smaller) and does not guard it yet.
 
 ## 12. Prompts (`engine/prompts.ts`, versioned as `PROMPT_VERSION = 'p1'`)
 

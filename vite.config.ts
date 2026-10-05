@@ -13,7 +13,7 @@ export default defineConfig({
   plugins: [
     react(),
     generouted(),
-    cloudflare(),
+    cloudflare({ remoteBindings: false }),
     // The app id `define`, the preview-secret cleanup, and the client dedupe
     // hint — all shipped by the SDK so a fix to any of them arrives with a
     // version bump, not an app edit. The app id is read from the wrangler
