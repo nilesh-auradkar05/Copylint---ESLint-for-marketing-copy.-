@@ -3,5 +3,5 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
-  test: { include: ['tests/t010-ui.test.tsx'], environment: 'node' },
+  test: { include: ['tests/t010-ui.test.tsx', 'tests/t011-review-room.test.tsx'], environment: 'node' },
 })
