@@ -17,7 +17,8 @@
 | T-007 | Golden-set eval runner + prompt iteration | A | S2 | T-005 | 2 h | TODO |
 | T-010 | App shell, landing, drafts list/new, design tokens | B | S1 | T-001 | 2.5 h | REVIEW |
 | T-010b | Wire T-010 draft views to live contracts and app navigation | B | S1 | T-010, T-002, T-003 | 0.5 h | REVIEW (B; reviewer APPROVE; 503 unit + 16 browser pass; deploy/live smoke pending) |
-| T-011 | Review room (fixtures first, then live data) | B | S1→S2 | T-003 (contracts), T-010 | 3.5 h | TODO |
+| T-011 | Review room (fixtures first, then live data) | B | S1→S2 | T-003 (contracts), T-010 | 3.5 h | REVIEW (B; fixture APPROVE; 517 unit pass; runtime 34 pass / 4 admin-setup failures / 1 paid skip; T-011b pending) |
+| T-011b | Review room live route, check request, progress, and two-browser sync | B | S2 | T-011, T-010b, T-005, T-006 | 1.5 h | BLOCKED (T-005/T-006 pending) |
 | T-012 | Sign-off UI + derived badge | B | S2 | T-011, T-002 | 1.5 h | TODO |
 | T-013 | Accept fix → new version → re-check | B | S2 | T-011, T-006 | 1 h | TODO |
 | T-014 | `publishDraft` server action (server-side gate) | A | S2 | T-003, T-002 | 1.5 h | READY |
@@ -133,6 +134,8 @@
 
 ## T-011 · Review room · Lane B
 **Spec:** §6 review room, §4.3 (consume `segmentBySpans`), §4.7 (consume `shipReady`).
+
+**Review split:** T-011 first delivers the fixture-backed read-only review room: immutable snapshot highlights, bidirectional card/span focus, ordered evidence cards, derived gate, and loading/empty/failed/stale presentation (T-011.1/.2 and presentation of .5). T-011b owns the protected `/drafts/:id` adapter, check request and error handling, version-scoped jobs/progress, and two-browser live verification (T-011.3/.4 and retry wiring in .5). This keeps each diff near the 400-line review budget while T-005/T-006 are pending. T-011 is not DONE until both slices are verified. Sign-off writes and accept-fix remain T-012/T-013.
 
 **Acceptance:**
 - T-011.1 With `eval/fixtures/review-room.json`, highlights match spans, and clicking a span focuses its card (and vice versa).

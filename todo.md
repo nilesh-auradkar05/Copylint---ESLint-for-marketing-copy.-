@@ -13,7 +13,9 @@ Update at the start and end of every session. Keep it under one screen.
 ## Next up
 - Lane A: T-005 and T-006 merged to lane-a (both REVIEW: live paid check pending) → T-014 (READY) → T-020 → T-023. T-007 eval needs T-005 live
 - Lane B note (T-011.3): `POST /api/drafts/:id/check` answers `202 {jobId, versionId}` (new or still running), `200 {versionId, cached:true}`, `401`, `403`, `404`, `413`, `429` (daily limit OR a failed check retried within 5 min; read `error`), `500`, `503` (storage). Send no body
-- Lane B: T-010b reviewer APPROVE; 503 unit tests and 16 browser tests pass (21 existing skips). Merge/deploy/live smoke next, then T-011. Lane B tests use port 5174.
+- Lane B: T-011 fixture APPROVE on `t/T-011-review-room`; 517 unit pass, type-check/lint clean; light/dark + mobile + keyboard browser smoke pass. T-011b live route/check/progress/sync waits for T-005/T-006.
+- Lane B runtime after rebase: 34 pass / 4 failures because local `Engineer` is member, not admin / 1 paid-sync skip. Human must provision the local admin role before the full suite can pass. Port 5174.
+- Lane B: T-010b is on local main; deploy/live smoke still pending. T-011 remains unmerged pending live integration.
 - Lane B: authentication and 4 usable test accounts confirmed; T-002/T-003 contracts and review-room fixture are available.
 - Lane B note: `AppJobRoom` socket is now admin-write / member-read. Members enqueue only via the check route (T-006)
 

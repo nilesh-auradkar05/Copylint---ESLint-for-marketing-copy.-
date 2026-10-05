@@ -53,6 +53,8 @@ This replaces the 5-day plan drawn earlier. We start Saturday, so there are thre
 
 ## Ceremonies (kept small)
 
+Lane B checkpoint, Oct 5: T-011 fixture review approved; live review route/check/progress/sync isolated in T-011b pending T-005/T-006. Local verification: 517 unit pass; runtime 34 pass, 4 admin-role setup failures, 1 paid-sync skip. No live review-room completion claim.
+
 - **Sprint start:** orchestrators read `todo.md` and their `TASKS.md` rows.
 - **Mid-sprint (~every 3 h):** human reviews `VERIFICATION-LOG.md` and merges, and tries the live URL.
 - **Sprint end:** fill the sprint's section in `docs/sprint-review.md`, check `npx deepspace app usage`, and re-plan the next sprint's rows.
