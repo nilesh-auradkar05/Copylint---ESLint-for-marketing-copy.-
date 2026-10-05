@@ -6,6 +6,8 @@
  * Retry-safe: a version already `checked` is a no-op summary; claims already stored for the version
  * are not judged again; and a `Duplicate:` refusal from the `uniqueOn ['versionId','claimHash']`
  * constraint counts as written. The version only becomes `failed` on the last attempt.
+ * Limitation: extraction is re-run on a retry, so rows written by an earlier attempt may not match the
+ * later extraction; the maxClaims cap still holds across attempts.
  */
 
 import { z } from 'zod'
@@ -52,6 +54,7 @@ function must<T>(what: string, result: ActionResult<T>): T {
 }
 
 async function storedClaims(records: VerifyDeps['records'], versionId: string) {
+  // No `limit`: internal record readers are unbounded and a version has at most maxClaims rows.
   const res = must('read claims', await records.query('claims', { where: { versionId } }))
   return res.records.map((r) => StoredClaim.parse(r.data))
 }
@@ -80,13 +83,16 @@ export async function verifyDraft(
   try {
     if (payload.mode === 'reverify') throw new Error('verify-draft mode "reverify" is not implemented (T-020)')
 
+    ctx.signal.throwIfAborted()
     ctx.progress(0, 'extracting claims')
     const { claims, dropped } = await extractClaims({ generate: deps.generate, signal: ctx.signal }, version.body)
 
     // A retry never judges (or pays for) a claim that an earlier attempt already stored.
     const done = new Set((await storedClaims(records, versionId)).map((c) => c.claimHash))
-    const queue = claims.filter((c) => !done.has(c.claimHash))
-    let finished = claims.length - queue.length
+    const room = Math.max(0, CONFIG.limits.maxClaims - done.size)
+    const queue = claims.filter((c) => !done.has(c.claimHash)).slice(0, room)
+    const total = done.size + queue.length
+    let finished = done.size
 
     async function judgeAndWrite(claim: ExtractedClaim): Promise<void> {
       ctx.signal.throwIfAborted() // kb.search takes no signal, so check before every retrieval
@@ -126,16 +132,22 @@ export async function verifyDraft(
           throw err
         }
         finished += 1
-        ctx.progress(finished / claims.length, `judged ${finished}/${claims.length}`)
+        ctx.progress(finished / total, `judged ${finished}/${total}`)
       }
     }
-    await Promise.all(Array.from({ length: Math.min(CONFIG.limits.judgeConcurrency, queue.length) }, worker))
-    if (queue.length === 0) ctx.progress(1, `judged ${claims.length}/${claims.length}`)
+    // Drain every worker before moving on, so no in-flight write lands after the job has failed.
+    const settled = await Promise.allSettled(
+      Array.from({ length: Math.min(CONFIG.limits.judgeConcurrency, queue.length) }, worker),
+    )
+    for (const s of settled) if (s.status === 'rejected') throw s.reason
+    if (queue.length === 0) ctx.progress(1, `judged ${total}/${total}`)
 
-    must(`update draft_versions/${versionId}`, await records.update('draft_versions', versionId, { status: 'checked' }))
+    const summary = tally(await storedClaims(records, versionId))
+    // `checked` is the last write: once it lands, the catch below can no longer fail the version.
     must(`update drafts/${draftId}`, await records.update('drafts', draftId, { latestVersionId: versionId }))
+    must(`update draft_versions/${versionId}`, await records.update('draft_versions', versionId, { status: 'checked' }))
 
-    return { ...tally(await storedClaims(records, versionId)), dropped, carriedForward: 0, ms: Date.now() - startedAt }
+    return { ...summary, dropped, carriedForward: 0, ms: Date.now() - startedAt }
   } catch (err) {
     if (job.attempts >= job.maxAttempts) {
       // Never mask the original error with a failure to record it.

@@ -25,6 +25,7 @@ export async function extractClaims(
     system: EXTRACT_SYSTEM,
     prompt: extractUserPrompt(body),
     schema: ExtractOut,
+    maxOutputTokens: CONFIG.limits.extractMaxOutputTokens,
   })
 
   const seen = new Set<string>()
