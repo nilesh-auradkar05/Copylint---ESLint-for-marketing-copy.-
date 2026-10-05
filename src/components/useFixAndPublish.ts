@@ -66,7 +66,8 @@ export function useFixAndPublish(o: Options) {
     try {
       await o.save(fixed.body)
       const versionId = await o.check()
-      if (!versionId) return
+      // The check's own error is already shown; say the text did change so the user is not left guessing.
+      if (!versionId) { o.setNotice('Your fixes were saved, but the re-check did not start. Re-check when ready.'); return }
       setPending({ url, versionId })
       o.setNotice(`Applied ${fixed.applied.length} fix${fixed.applied.length === 1 ? '' : 'es'}. Re-checking the fixed text…`)
     } catch (error) {
