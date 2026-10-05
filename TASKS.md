@@ -19,7 +19,7 @@
 | T-010b | Wire T-010 draft views to live contracts and app navigation | B | S1 | T-010, T-002, T-003 | 0.5 h | REVIEW (B; reviewer APPROVE; 503 unit + 16 browser pass; deploy/live smoke pending) |
 | T-011 | Review room (fixtures first, then live data) | B | S1→S2 | T-003 (contracts), T-010 | 3.5 h | REVIEW (B; fixture APPROVE; 517 unit pass; runtime 34 pass / 4 admin-setup failures / 1 paid skip; T-011b pending) |
 | T-011b | Review room live route, check request, progress, and two-browser sync | B | S2 | T-011, T-010b, T-005, T-006 | 1.5 h | BLOCKED (T-005/T-006 pending) |
-| T-012 | Sign-off UI + derived badge | B | S2 | T-011, T-002 | 1.5 h | TODO |
+| T-012 | Sign-off UI + derived badge | B | S2 | T-011, T-002 | 1.5 h | REVIEW (taken over by A with human approval; merged to lane-a; reviewer APPROVE; live sign-off + publish check pending) |
 | T-013 | Accept fix → new version → re-check | B | S2 | T-011, T-006 | 1 h | TODO |
 | T-014 | `publishDraft` server action (server-side gate) | A | S2 | T-003, T-002 | 1.5 h | REVIEW (A; merged to lane-a; reviewer APPROVE; 648 unit pass; live action smoke pending deploy) |
 | T-015 | Two-user Playwright spec (live sync + forged writes) | B | S2 | T-012 | 1.5 h | TODO |

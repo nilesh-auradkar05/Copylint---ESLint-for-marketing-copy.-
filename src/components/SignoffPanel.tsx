@@ -41,10 +41,10 @@ function ClaimRow({ claim, signoffs, isAdmin, userId, ready, names, onDecide }: 
       <p className="proof-muted">{s.note}</p>
     </li>)}</ul>}
     {isAdmin && <div>
-      <Input aria-label="Sign-off note" placeholder="Why approve or cut this claim?" value={note} disabled={pending} onChange={event => setNote(event.target.value)} />
+      <Input aria-label={`Sign-off note for: ${claim.text}`} placeholder="Why approve or cut this claim?" value={note} disabled={pending} onChange={event => setNote(event.target.value)} />
       <div className="proof-row" style={{ justifyContent: 'flex-start', gap: '0.5rem', marginTop: '0.5rem' }}>
-        <Button size="sm" disabled={!ready || pending} onClick={() => void decide('approve')}>Approve</Button>
-        <Button size="sm" variant="outline" disabled={!ready || pending} onClick={() => void decide('cut')}>Cut</Button>
+        <Button size="sm" disabled={!ready || pending} aria-label={`Approve: ${claim.text}`} onClick={() => void decide('approve')}>Approve</Button>
+        <Button size="sm" variant="outline" disabled={!ready || pending} aria-label={`Cut: ${claim.text}`} onClick={() => void decide('cut')}>Cut</Button>
       </div>
       {error && <p role="alert" className="proof-error">{error}</p>}
     </div>}
