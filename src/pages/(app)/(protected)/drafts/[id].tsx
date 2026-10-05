@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getAuthToken, useJobs, useQuery } from 'deepspace'
+import { getAuthToken, useJobs, useMutations, useQuery, useUser, useUsers } from 'deepspace'
 import { ReviewRoom } from '@/components/ReviewRoom'
+import { SignoffPanel, type SignoffDecision } from '@/components/SignoffPanel'
 import type { DraftInput } from '@/components/DraftForm'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -17,6 +18,10 @@ export default function DraftPage() {
   const signoffs = useQuery<Omit<Signoff, 'id'>>('signoffs')
   const kb = useQuery<{ version: number }>('kb_state')
   const { jobs } = useJobs(SCOPE_ID)
+  const { user } = useUser()
+  const { users } = useUsers()
+  // reviewerId is userBound: the server stamps it, so the client never sends it.
+  const signoffWrites = useMutations<Omit<Signoff, 'id' | 'reviewerId'>>('signoffs')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -54,6 +59,11 @@ export default function DraftPage() {
       else setError(result?.error ?? `Publish failed (${response.status}).`)
     } catch { setError('Could not reach the server. Try again.') } finally { setBusy(false) }
   }
+  const names = Object.fromEntries(users.map(({ id, name }) => [id, name]))
+  const decide = async ({ claim, decision, note, existing }: SignoffDecision) => {
+    if (existing) await signoffWrites.putConfirmed(existing.id, { decision, note })
+    else await signoffWrites.createConfirmed({ claimId: claim.id, versionId: version.recordId, decision, note })
+  }
   return <>
     <div className="proof-page proof-row">
       <a className="proof-link" href="/drafts">← Drafts</a>
@@ -69,6 +79,10 @@ export default function DraftPage() {
       <span aria-hidden="true" className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" />
       <span>{job?.progressMessage ?? 'Starting the check…'}{job?.progress != null && ` · ${Math.round(job.progress * 100)}%`}</span>
     </p>}
+    {version?.data.status === 'checked' && <SignoffPanel versionId={version.recordId} isAdmin={user?.role === 'admin'} userId={user?.id ?? ''}
+      ready={signoffWrites.ready} names={names} onDecide={decide}
+      claims={claims.records.map(record => ({ ...record.data, id: record.recordId })).filter(claim => claim.versionId === version.recordId)}
+      signoffs={signoffs.records.map(record => ({ ...record.data, id: record.recordId }))} />}
     <ReviewRoom draft={draft} version={version && { ...version.data, id: version.recordId }} loading={busy && !version}
       claims={claims.records.map(record => ({ ...record.data, id: record.recordId }))}
       signoffs={signoffs.records.map(record => ({ ...record.data, id: record.recordId }))}
