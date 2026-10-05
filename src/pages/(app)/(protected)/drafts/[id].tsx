@@ -28,6 +28,7 @@ export default function DraftPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [publishedUrl, setPublishedUrl] = useState('')
   const [url, setUrl] = useState('')
   const draftWrites = useMutations<Partial<DraftInput>>('drafts')
   const [editing, setEditing] = useState(false)
@@ -52,11 +53,11 @@ export default function DraftPage() {
   }
   // ponytail: inline publish control so the gate is reachable; T-016 (Lane B) owns the modal and /publications page.
   const publish = async (versionId: string, url: string) => {
-    setBusy(true); setError(''); setNotice('')
+    setBusy(true); setError(''); setNotice(''); setPublishedUrl('')
     try {
       const response = await fetch('/api/actions/publishDraft', { method: 'POST', headers: { Authorization: `Bearer ${await getAuthToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ draftId: id, versionId, url }) })
       const result = await response.json().catch(() => null) as { success?: boolean; error?: string; data?: { ok: boolean; blocking?: string[] } } | null
-      if (result?.data?.ok) setNotice(`Published at ${url}.`)
+      if (result?.data?.ok) setPublishedUrl(url)
       else if (result?.data) setError(result.data.blocking?.length ? `Not ship-ready: ${result.data.blocking.length} claim(s) still need an engineer sign-off.` : 'Not ship-ready: this check is out of date. Re-check the draft first.')
       else setError(result?.error ?? `Publish failed (${response.status}).`)
     } catch { setError('Could not reach the server. Try again.') } finally { setBusy(false) }
@@ -109,6 +110,8 @@ export default function DraftPage() {
     {version?.data.status === 'checked' && flow.reason && <p className="proof-page proof-muted">{flow.reason}</p>}
     {error && <p role="alert" className="proof-page proof-error">{error}</p>}
     {notice && <p role="status" className="proof-page proof-muted">{notice}</p>}
+    {/* The app records where the copy is published; it does not host it. The server only accepts http(s) URLs. */}
+    {publishedUrl && <p role="status" className="proof-page proof-muted">Recorded as published at <a className="proof-link" href={publishedUrl} target="_blank" rel="noopener noreferrer">{publishedUrl}</a> (opens in a new window). This app does not host the page.</p>}
     {(busy || version?.data.status === 'checking') && <p role="status" aria-live="polite" className="proof-page proof-row" style={{ justifyContent: 'flex-start', gap: '0.75rem' }}>
       <span aria-hidden="true" className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" />
       <span>{job?.progressMessage ?? 'Starting the check…'}{job?.progress != null && ` · ${Math.round(job.progress * 100)}%`}</span>
