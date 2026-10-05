@@ -4,12 +4,32 @@ import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import sample from '../../seed/launch-thread.md?raw'
 import type { DraftCreate, DraftInput } from './DraftForm'
+import type { Claim, Signoff, Version } from '@/engine/contracts'
+import { blockingClaims, shipReady } from '@/engine/gate'
 
-export type DraftRow = { recordId: string; updatedAt: string; data: DraftInput }
-export function DraftList({ drafts, ready, onCreate }: { drafts: DraftRow[]; ready: boolean; onCreate: DraftCreate }) {
+export type DraftRow = { recordId: string; updatedAt: string; data: DraftInput & { latestVersionId?: string } }
+export type PublicationRow = { recordId: string; data: { draftId: string; versionId: string; status: 'live' | 'stale' } }
+export function DraftList({ drafts, ready, onCreate, versions = [], claims = [], signoffs = [], publications = [], kbVersion, dataReady = true }: {
+  drafts: DraftRow[]; ready: boolean; onCreate: DraftCreate; versions?: Version[]; claims?: Claim[];
+  signoffs?: Signoff[]; publications?: PublicationRow[]; kbVersion?: number; dataReady?: boolean
+}) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  function badge(draft: DraftRow) {
+    if (!dataReady) return '… LOADING'
+    const version = versions.find(v => v.id === draft.data.latestVersionId && v.draftId === draft.recordId && v.body === draft.data.body)
+    if (!version) return '○ DRAFT'
+    if (version.status === 'checking') return '◌ CHECKING'
+    if (version.status !== 'checked') return '○ DRAFT'
+    const currentPublications = publications.filter(p => p.data.draftId === draft.recordId && p.data.versionId === version.id)
+    if (currentPublications.some(p => p.data.status === 'stale') || (kbVersion !== undefined && version.kbVersion !== kbVersion)) return '! STALE'
+    if (currentPublications.some(p => p.data.status === 'live')) return '✓ PUBLISHED'
+    if (kbVersion === undefined) return '○ DRAFT'
+    const currentClaims = claims.filter(c => c.draftId === draft.recordId && c.versionId === version.id)
+    const currentSignoffs = signoffs.filter(s => s.versionId === version.id)
+    return shipReady(version, currentClaims, currentSignoffs, kbVersion) ? '✓ SHIP-READY' : `! BLOCKED ${blockingClaims(currentClaims, currentSignoffs).length}`
+  }
   async function createSample() {
     if (!ready || pending) return
     setPending(true); setError(''); setSaved(false)
@@ -28,7 +48,7 @@ export function DraftList({ drafts, ready, onCreate }: { drafts: DraftRow[]; rea
       {!ready && <p className="proof-muted" role="status">Draft creation is currently unavailable.</p>}
     </div> : <ul className="proof-list">{drafts.map(record => <li key={record.recordId} className="proof-row">
       <div><a href={`/drafts/${encodeURIComponent(record.recordId)}`} className="proof-draft-title">{record.data.title}</a><p className="proof-muted">{record.data.channel} · Updated <time dateTime={record.updatedAt}>{new Date(record.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</time></p></div>
-      <Badge variant="outline" className="proof-verdict">○ DRAFT</Badge>
+      <Badge variant="outline" className="proof-verdict">{badge(record)}</Badge>
     </li>)}</ul>}
   </section>
 }

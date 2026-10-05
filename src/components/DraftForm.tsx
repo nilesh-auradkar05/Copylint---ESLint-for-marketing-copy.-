@@ -4,11 +4,11 @@ import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { CONFIG } from '@/engine/config'
 
-// UI callback shape; replace with the Lane A draft contract when available.
 export type DraftInput = { title: string; channel: 'blog' | 'thread' | 'landing' | 'email'; body: string }
 export type DraftCreate = (data: DraftInput) => Promise<void>
-export const BODY_LIMIT = 20_000 // Pending the read-only engine/config.ts contract.
+export const BODY_LIMIT = CONFIG.limits.maxBodyChars
 
 export function DraftForm({ ready, onCreate }: { ready: boolean; onCreate: DraftCreate }) {
   const id = useId()
@@ -20,7 +20,7 @@ export function DraftForm({ ready, onCreate }: { ready: boolean; onCreate: Draft
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
   const titleError = submitted && !title.trim() ? 'Give this draft a title.' : ''
-  const bodyError = body.length > BODY_LIMIT ? 'Keep the body within 20,000 characters.' : submitted && !body.trim() ? 'Paste your draft body.' : ''
+  const bodyError = body.length > BODY_LIMIT ? `Keep the body within ${BODY_LIMIT.toLocaleString('en-US')} characters.` : submitted && !body.trim() ? 'Paste your draft body.' : ''
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -50,7 +50,7 @@ export function DraftForm({ ready, onCreate }: { ready: boolean; onCreate: Draft
         </Select></div>
       <div><Label htmlFor={`${id}-body`}>Body</Label>
         <Textarea id={`${id}-body`} rows={12} value={body} onChange={e => { setBody(e.target.value); setSaved(false) }} maxLength={BODY_LIMIT} required disabled={pending} aria-invalid={!!bodyError} aria-describedby={`${id}-count ${id}-body-error`} placeholder="Your launch post, thread, or product page…" />
-        <p id={`${id}-count`} className="proof-count" aria-live="polite">{body.length.toLocaleString('en-US')} / 20,000 characters</p>
+        <p id={`${id}-count`} className="proof-count" aria-live="polite">{body.length.toLocaleString('en-US')} / {BODY_LIMIT.toLocaleString('en-US')} characters</p>
         <p id={`${id}-body-error`} className="proof-error">{bodyError}</p></div>
       {error && <p role="alert" className="proof-error">{error} Your draft is still here. Try again below.</p>}
       {saved && <p role="status">Draft created. <a href="/drafts">View drafts →</a></p>}
