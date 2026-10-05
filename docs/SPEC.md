@@ -232,7 +232,7 @@ A version with zero claims that is `checked` is ship-ready.
 |---|---|---|---|
 | `POST /api/drafts/:draftId/check` | signed-in member/admin with read access to the draft | Validate. Draft body ≤ 20,000. Quota: count `draft_versions` where `requestedBy = me` and `requestedAt` > now−24h, compared to `checksPerUserPerDay`. Compute `versionId`. If an existing version is checked or checking, return it. Else create version (`checking`) and `enqueueJob(env.JOB_ROOMS, SCOPE, 'verify-draft', payload, { maxAttempts: 2, enqueuedBy: userId })` [V background-jobs] | `202 {jobId, versionId}`, `200 {versionId, cached:true}`, `401`, `403`, `404`, `413`, `429` |
 | `POST /api/admin/sync` | admin | enqueue `sync-sources` `{reverify:true}` | `202 {jobId}`, `401`, `403` |
-| action `publishDraft` | caller must be owner or collaborator of the draft | `PublishRequest` zod → load version, claims, signoffs, kb_state → `shipReady` → create `publications` (`live`) | `{ok:true, publicationId}` / `{ok:false, reason:'not_ship_ready', blocking:[ids]}` |
+| action `publishDraft` | caller must be owner or collaborator of the draft | `PublishRequest` zod → load version, claims, signoffs, kb_state → `shipReady` → create `publications` (`live`) | `{success:true, data:{ok:true, publicationId}}` / `{success:true, data:{ok:false, reason:'not_ship_ready', blocking:[ids]}}` / `{success:false, code, error}` for `invalid_request`, `forbidden`, `version_not_found`, `read_failed` (§11.13) |
 
 - Auth in routes: use the scaffold's `resolveAuth(c.req.raw, c.env)` pattern [V background-jobs example].
 - Client invocation of server actions: [CHECK `guides/server-actions.md`].
@@ -327,6 +327,13 @@ has no scaffold yet; re-confirm the version once T-001 lands). Corrections to ea
     `authorizeRead` for members, or `useJobs` shows them nothing.
 12. **`kb.list` paging.** `perPage` is capped at 50; `sync.ts` paginates. `kb.add` returns several items for a text file over 4 MiB
     (`name.part-N.md`); `sync.ts` assumes exactly one item per page (§10: our pages are far smaller) and does not guard it yet.
+13. **Action result shape.** The SDK `ActionResult` is `{success:true, data}` or `{success:false, error, code?}`; the failure arm
+    carries no `data`. `publishDraft` therefore returns a gate refusal as `success:true` with `data.ok:false` and `data.blocking`,
+    and access or validation refusals as `success:false`. T-016 reads `result.data.ok`; `success:false` is a plain error.
+14. **Actions bypass schema RBAC.** `createActionTools` sends `X-App-Action: true`, which turns per-record permissions off, so
+    `tools.create('publications')` works although `member` and `admin` have `create:false`. The only authorization is the
+    owner/collaborator check inside the action. Unit tests use a fake store, so this needs one live smoke after deploy.
+    `tools.query` on the action path has no default limit (the 50-row default applies only to the AI tool path).
 
 ## 12. Prompts (`engine/prompts.ts`, versioned as `PROMPT_VERSION = 'p1'`)
 

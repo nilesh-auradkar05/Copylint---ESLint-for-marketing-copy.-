@@ -21,7 +21,7 @@
 | T-011b | Review room live route, check request, progress, and two-browser sync | B | S2 | T-011, T-010b, T-005, T-006 | 1.5 h | BLOCKED (T-005/T-006 pending) |
 | T-012 | Sign-off UI + derived badge | B | S2 | T-011, T-002 | 1.5 h | TODO |
 | T-013 | Accept fix → new version → re-check | B | S2 | T-011, T-006 | 1 h | TODO |
-| T-014 | `publishDraft` server action (server-side gate) | A | S2 | T-003, T-002 | 1.5 h | READY |
+| T-014 | `publishDraft` server action (server-side gate) | A | S2 | T-003, T-002 | 1.5 h | REVIEW (A; merged to lane-a; reviewer APPROVE; 648 unit pass; live action smoke pending deploy) |
 | T-015 | Two-user Playwright spec (live sync + forged writes) | B | S2 | T-012 | 1.5 h | TODO |
 | T-016 | Publications page + admin sources page + publish modal | B | S2 | T-014 | 2 h | TODO |
 | T-020 | Drift: cron + reverify with carry-forward + stale flags | A | S2→S3 | T-004, T-005, T-014 | 3 h | TODO |
