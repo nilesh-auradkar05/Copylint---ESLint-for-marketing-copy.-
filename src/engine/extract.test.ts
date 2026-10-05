@@ -123,4 +123,15 @@ describe('extractClaims', () => {
     }
     await expect(extractClaims({ generate }, BODY)).rejects.toThrow('upstream timeout')
   })
+
+  it('[T-005.6] an abort from the model is not repaired: same error, exactly one generate call', async () => {
+    const abort = new DOMException('aborted', 'AbortError')
+    const calls: Req[] = []
+    const generate: GenerateFn = async (req) => {
+      calls.push(req)
+      throw abort
+    }
+    await expect(extractClaims({ generate }, BODY)).rejects.toBe(abort)
+    expect(calls).toHaveLength(1)
+  })
 })

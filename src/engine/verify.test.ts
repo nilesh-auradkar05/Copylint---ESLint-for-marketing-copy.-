@@ -455,3 +455,70 @@ describe('verifyDraft: claim cap and drops (T-005.7)', () => {
     expect(h.calls.filter((c) => c.model === CONFIG.models.judge)).toHaveLength(0)
   })
 })
+
+describe('verifyDraft: retry safety (review loop 1)', () => {
+  const lines = (prefix: string) => Array.from({ length: 25 }, (_, i) => `${prefix} fact number ${i} about DeepSpace holds.`)
+  const judgeCalls = (x: Harness) => x.calls.filter((c) => c.model === CONFIG.models.judge).length
+
+  it('[T-005.7] a retry that extracts different claims never pushes the stored rows past maxClaims', async () => {
+    const [A, B] = [lines('Alpha'), lines('Bravo')]
+    let extractCalls = 0
+    h = harness(() => ({ claims: (extractCalls++ === 0 ? A : B).map((l) => ex(l, l.slice(0, -1))) }))
+    setup(h, [...A, ...B].join('\n'))
+    h.records.failWhen = (op, c, nth) => op === 'create' && c === 'claims' && nth > 3 // 3 rows land, then infra failure
+    await expect(verifyDraft(h.deps, job(1, 2), ctx().ctx)).rejects.toThrow()
+    await new Promise((r) => setTimeout(r, 60)) // let in-flight workers settle
+    const k = h.records.rows('claims').length
+    expect(k).toBeGreaterThanOrEqual(3)
+    expect(h.records.row('draft_versions', VERSION).status).toBe('checking')
+
+    h.records.failWhen = null
+    const before = judgeCalls(h)
+    const retry = ctx()
+    const r = await verifyDraft(h.deps, job(2, 2), retry.ctx)
+    const rows = h.records.rows('claims')
+    expect(rows).toHaveLength(CONFIG.limits.maxClaims)
+    expect(new Set(rows.map((x) => x.data.claimHash)).size).toBe(CONFIG.limits.maxClaims)
+    expect(r.claims).toBe(rows.length)
+    expect(judgeCalls(h) - before).toBe(CONFIG.limits.maxClaims - k)
+    const f = retry.progress.map(([x]) => x)
+    for (let i = 1; i < f.length; i++) expect(f[i]).toBeGreaterThanOrEqual(f[i - 1])
+    expect(f[f.length - 1]).toBe(1)
+    expect(h.records.row('draft_versions', VERSION).status).toBe('checked')
+  })
+
+  it('[T-005.3] finalisation order: a failed drafts update leaves the version checking, and the retry completes without re-judging', async () => {
+    h.records.failWhen = (op, c) => op === 'update' && c === 'drafts'
+    await expect(verifyDraft(h.deps, job(1, 2), ctx().ctx)).rejects.toThrow()
+    expect(h.records.row('draft_versions', VERSION).status).toBe('checking')
+    expect(h.records.rows('claims')).toHaveLength(5)
+
+    h.records.failWhen = null
+    const before = h.calls.filter((c) => c.model === CONFIG.models.judge).length
+    const r = await verifyDraft(h.deps, job(2, 2), ctx().ctx)
+    expect(h.calls.filter((c) => c.model === CONFIG.models.judge).length - before).toBe(0)
+    const rows = h.records.rows('claims')
+    expect(rows).toHaveLength(5)
+    expect(new Set(rows.map((x) => x.data.claimHash)).size).toBe(5)
+    expect(r.claims).toBe(5)
+    expect(h.records.row('drafts', DRAFT).latestVersionId).toBe(VERSION)
+    expect(h.records.row('draft_versions', VERSION).status).toBe('checked')
+  })
+
+  it('[T-005.3] a failing drafts update on the last attempt ends the version failed, never checked', async () => {
+    h.records.failWhen = (op, c) => op === 'update' && c === 'drafts'
+    await expect(verifyDraft(h.deps, job(2, 2), ctx().ctx)).rejects.toThrow()
+    expect(h.records.row('draft_versions', VERSION).status).toBe('failed')
+  })
+})
+
+describe('verifyDraft: already-aborted signal (review loop 1)', () => {
+  it('[T-005.6] rejects without any model call, search or claim write', async () => {
+    const ac = new AbortController()
+    ac.abort()
+    await expect(verifyDraft(h.deps, job(), ctx(ac.signal).ctx)).rejects.toThrow()
+    expect(h.calls).toHaveLength(0)
+    expect(h.kb.queries).toHaveLength(0)
+    expect(h.records.rows('claims')).toHaveLength(0)
+  })
+})
