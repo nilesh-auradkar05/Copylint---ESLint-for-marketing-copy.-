@@ -26,8 +26,9 @@ import { buildTools } from './src/ai/tools.js'
 import { tasks as cronTasks, runTask as runCronTask } from './src/cron.js'
 import { runJob } from './src/jobs.js'
 import { schemas } from './src/schemas.js'
-import { registerActionRoutes } from './src/server/action-routes.js'
+import { createActionTools, registerActionRoutes } from './src/server/action-routes.js'
 import { registerAdminRoutes } from './src/server/admin-routes.js'
+import { registerCheckRoutes } from './src/server/check-routes.js'
 import {
   registerAuthAndIntegrationRoutes,
   registerPlatformProxyRoutes,
@@ -148,11 +149,19 @@ app.use('*', async (c, next) => {
 registerAuthAndIntegrationRoutes(app)
 registerRealtimeRoutes(app)
 registerActionRoutes(app, resolveAuth)
-registerAdminRoutes(app, {
+const enqueue = (
+  env: Env,
+  type: string,
+  payload: unknown,
+  options: { maxAttempts?: number; enqueuedBy?: string },
+): Promise<string> => enqueueJob(env.JOB_ROOMS, `app:${env.DEEPSPACE_APP_ID}`, type, payload, options)
+registerAdminRoutes(app, { resolveAuth, resolveRole: resolveAppRole, enqueue })
+registerCheckRoutes(app, {
   resolveAuth,
   resolveRole: resolveAppRole,
-  enqueue: (env, type, payload, options) =>
-    enqueueJob(env.JOB_ROOMS, `app:${env.DEEPSPACE_APP_ID}`, type, payload, options),
+  // Jobs and server routes act as the app owner; the checks above are the boundary.
+  records: (env) => createActionTools(env, env.OWNER_USER_ID, ''),
+  enqueue,
 })
 // The in-app assistant stores chat history in `ai-chats` / `ai-messages`,
 // which only the copilot overlay declares. When present, registerAgent enables

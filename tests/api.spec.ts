@@ -498,3 +498,48 @@ test.describe('POST /api/admin/sync (live)', () => {
     expect(typeof body.jobId).toBe('string')
   })
 })
+
+/**
+ * T-006 live check of POST /api/drafts/:id/check (SPEC §7, AGENTS.md §6 "check route").
+ * The status matrix, quota, caching and enqueue contract are proven without a server by
+ * `src/server/check-routes.test.ts`. These cover live wiring only. Anonymous and "unknown draft"
+ * stop before step 8, so they enqueue nothing and cost nothing. The 202 path starts a real check
+ * (~26 model calls on the owner's bill) and is opt-in.
+ */
+test.describe('POST /api/drafts/:id/check (live)', () => {
+  test('[T-006.1] anonymous caller gets 401', async ({ request }) => {
+    const res = await request.post('/api/drafts/does-not-exist/check', { data: {} })
+    expect(res.status()).toBe(401)
+  })
+
+  test('[T-006.1] a signed-in member checking a draft id that does not exist gets 404', async ({ users, request }) => {
+    test.skip(!hasAccounts('Dev1'), 'Needs a test account named Dev1 (member).')
+    const [member] = await users(['Dev1'])
+    const page = await openProbe(member.context)
+    const token = await signedInToken(page)
+    expect(token, 'signed-in page must expose a bearer token').toBeTruthy()
+    const res = await request.post('/api/drafts/__test-missing-draft__/check', { data: {}, headers: { Authorization: `Bearer ${token}` } })
+    expect(res.status()).toBe(404)
+  })
+
+  test('[T-006.4] the owner of a small draft gets 202 with jobId and versionId', async ({ users, request }) => {
+    test.skip(process.env.RUN_PAID_CHECK !== '1', 'starts a real check job (model + knowledge calls on the owner bill); opt in with RUN_PAID_CHECK=1')
+    test.skip(!hasAccounts('Dev1'), 'Needs a test account named Dev1 (member).')
+    const [member] = await users(['Dev1'])
+    const page = await openProbe(member.context)
+    const token = await signedInToken(page)
+    const marker = `__test-${Date.now()}__`
+    const created = await probeCreate(page, 'drafts', { title: `${marker} check`, body: 'DeepSpace apps run on Cloudflare Workers.', channel: 'blog', collaborators: [] })
+    expect(created.ok, JSON.stringify(created)).toBe(true)
+    const draftId = (await probeRows(page, 'drafts')).find(r => r.data.title === `${marker} check`)?.recordId as string
+    try {
+      const res = await request.post(`/api/drafts/${draftId}/check`, { data: { body: 'ignored', type: 'sync-sources' }, headers: { Authorization: `Bearer ${token}` } })
+      expect(res.status()).toBe(202)
+      const json = (await res.json()) as { jobId?: unknown; versionId?: unknown }
+      expect(typeof json.jobId).toBe('string')
+      expect(typeof json.versionId).toBe('string')
+    } finally {
+      await probeRemove(page, 'drafts', draftId)
+    }
+  })
+})

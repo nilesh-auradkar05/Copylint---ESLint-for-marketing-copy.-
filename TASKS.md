@@ -13,14 +13,14 @@
 | T-003 | Engine contracts: ids, spans, gate, citations | A | S1 | T-001 | 1.5 h | DONE |
 | T-004 | Knowledge binding + `sync-sources` job + probes | A | S1 | T-002 | 2 h | REVIEW (merged to lane-a; reviewer APPROVE; live checks .1/.2/.5/.6 need first deploy + human) |
 | T-005 | `verify-draft` job (extract → retrieve → judge → write) | A | S1 | T-003, T-004 | 3 h | REVIEW (merged to lane-a; reviewer APPROVE on pass 2; live seed-draft smoke needs T-006 route + first deploy + human) |
-| T-006 | `POST /api/drafts/:id/check` route + quota | A | S1 | T-002, T-005 | 1 h | READY |
+| T-006 | `POST /api/drafts/:id/check` route + quota | A | S1 | T-002, T-005 | 1 h | REVIEW (merged to lane-a; reviewer APPROVE; live 401/404 pass locally; live 202 is paid, needs first deploy + human) |
 | T-007 | Golden-set eval runner + prompt iteration | A | S2 | T-005 | 2 h | TODO |
 | T-010 | App shell, landing, drafts list/new, design tokens | B | S1 | T-001 | 2.5 h | REVIEW |
 | T-010b | Wire T-010 draft views to live contracts and app navigation | B | S1 | T-010, T-002, T-003 | 0.5 h | REVIEW (B; reviewer APPROVE; 503 unit + 16 browser pass; deploy/live smoke pending) |
 | T-011 | Review room (fixtures first, then live data) | B | S1→S2 | T-003 (contracts), T-010 | 3.5 h | TODO |
 | T-012 | Sign-off UI + derived badge | B | S2 | T-011, T-002 | 1.5 h | TODO |
 | T-013 | Accept fix → new version → re-check | B | S2 | T-011, T-006 | 1 h | TODO |
-| T-014 | `publishDraft` server action (server-side gate) | A | S2 | T-003, T-002 | 1.5 h | TODO |
+| T-014 | `publishDraft` server action (server-side gate) | A | S2 | T-003, T-002 | 1.5 h | READY |
 | T-015 | Two-user Playwright spec (live sync + forged writes) | B | S2 | T-012 | 1.5 h | TODO |
 | T-016 | Publications page + admin sources page + publish modal | B | S2 | T-014 | 2 h | TODO |
 | T-020 | Drift: cron + reverify with carry-forward + stale flags | A | S2→S3 | T-004, T-005, T-014 | 3 h | TODO |
