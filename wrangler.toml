@@ -60,9 +60,9 @@ bindings = [
 # `knowledge(env)` from deepspace/worker. The instance is never exposed on env;
 # the binding name is only the provisioning key:
 #
-# [[ai_search]]
-# binding = "KNOWLEDGE"
-# instance_name = "auto"
+[[ai_search]]
+binding = "KNOWLEDGE"
+instance_name = "auto"
 #
 # Full reference, behavior, and pricing:
 #   https://docs.deep.space/bindings/knowledge

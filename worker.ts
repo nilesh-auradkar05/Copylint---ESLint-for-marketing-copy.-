@@ -11,6 +11,7 @@ import {
   armCronRoom,
   CanvasRoom,
   CronRoom,
+  enqueueJob,
   JobRoom,
   PresenceRoom,
   RecordRoom,
@@ -26,6 +27,7 @@ import { tasks as cronTasks, runTask as runCronTask } from './src/cron.js'
 import { runJob } from './src/jobs.js'
 import { schemas } from './src/schemas.js'
 import { registerActionRoutes } from './src/server/action-routes.js'
+import { registerAdminRoutes } from './src/server/admin-routes.js'
 import {
   registerAuthAndIntegrationRoutes,
   registerPlatformProxyRoutes,
@@ -137,6 +139,12 @@ app.use('*', async (c, next) => {
 registerAuthAndIntegrationRoutes(app)
 registerRealtimeRoutes(app)
 registerActionRoutes(app, resolveAuth)
+registerAdminRoutes(app, {
+  resolveAuth,
+  resolveRole: resolveAppRole,
+  enqueue: (env, type, payload, options) =>
+    enqueueJob(env.JOB_ROOMS, `app:${env.DEEPSPACE_APP_ID}`, type, payload, options),
+})
 // The in-app assistant stores chat history in `ai-chats` / `ai-messages`,
 // which only the copilot overlay declares. When present, registerAgent enables
 // both that website AI and the user's local Codex/Claude/etc. assistant.

@@ -9,8 +9,8 @@ export const CONFIG = {
     excerptChars: 300,
     checksPerUserPerDay: 20,
   },
-  kb: { folder: 'docs', mode: 'hybrid' as const },
-  job: { verifyMaxAttempts: 2, syncIndexWaitMs: 120_000 },
+  kb: { folder: 'docs', mode: 'hybrid' as const, maxQueryChars: 4_096 },
+  job: { verifyMaxAttempts: 2, syncIndexWaitMs: 120_000, syncPollMs: 3_000, syncListPerPage: 50 },
   cron: { name: 'docs-drift', schedule: '0 6 * * *', timezone: 'America/New_York' },
   docsBase: 'https://docs.deep.space/',
   sourcePages: [

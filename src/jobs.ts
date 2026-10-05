@@ -39,12 +39,32 @@
  *   }
  */
 
+import { knowledge } from 'deepspace/worker'
 import type { Job, JobContext } from 'deepspace/worker'
+import { SyncJobPayload } from './engine/contracts'
+import { syncSources } from './engine/sync'
+import { createActionTools } from './server/action-routes'
+import type { Env } from '../worker'
 
-export async function runJob(
-  _job: Job,
-  _ctx: JobContext,
-  _env: unknown,
-): Promise<void> {
-  // No-op — implement your job handlers here. Dispatch on `_job.type`.
+// `env` is `unknown` at this boundary (AppJobRoom hands over its Env); handlers narrow it when needed.
+export async function runJob(job: Job, ctx: JobContext, rawEnv: unknown): Promise<unknown> {
+  switch (job.type) {
+    case 'sync-sources': {
+      const env = rawEnv as Env
+      const payload = SyncJobPayload.parse(job.payload ?? {})
+      return await syncSources(
+        {
+          // Wrapped: a bare `fetch` called as a method of another object throws in Workers.
+          fetch: (input, init) => fetch(input, init),
+          kb: knowledge(env),
+          // Jobs act as the app owner; RBAC is off for action tools, the server-side job is the boundary.
+          records: createActionTools(env, env.OWNER_USER_ID, env.APP_OWNER_JWT),
+          signal: ctx.signal,
+        },
+        payload,
+      )
+    }
+    default:
+      throw new Error(`Unknown job type: ${job.type}`)
+  }
 }
