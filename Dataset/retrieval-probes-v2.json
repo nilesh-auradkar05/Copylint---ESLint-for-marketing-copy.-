@@ -1,0 +1,177 @@
+[
+  {
+    "id": "q01",
+    "q": "Which server-side component checks collection reads and writes before records reach subscribers?",
+    "expect": "concepts/permissions",
+    "tags": [
+      "paraphrase",
+      "security"
+    ]
+  },
+  {
+    "id": "q02",
+    "q": "How can I stop a user from casting a second vote in the same poll even with a forged client write?",
+    "expect": "concepts/permissions",
+    "tags": [
+      "uniqueOn",
+      "security"
+    ]
+  },
+  {
+    "id": "q03",
+    "q": "What role does a newly authenticated app user receive unless I override the default?",
+    "expect": "concepts/permissions",
+    "tags": [
+      "default-role"
+    ]
+  },
+  {
+    "id": "q04",
+    "q": "What happens if I use waitUntil for a model generation that lasts several minutes?",
+    "expect": "guides/background-jobs",
+    "tags": [
+      "wrong-primitive"
+    ]
+  },
+  {
+    "id": "q05",
+    "q": "How many attempts does a job get when I never set maxAttempts?",
+    "expect": "guides/background-jobs",
+    "tags": [
+      "default",
+      "number"
+    ]
+  },
+  {
+    "id": "q06",
+    "q": "How do I checkpoint work that cannot finish inside one roughly fifteen-minute job tick?",
+    "expect": "guides/background-jobs",
+    "tags": [
+      "continue",
+      "long-job"
+    ]
+  },
+  {
+    "id": "q07",
+    "q": "Can a normal member press Run now on an owner-billed scheduled task in the stock scaffold?",
+    "expect": "guides/scheduled-jobs",
+    "tags": [
+      "rbac",
+      "counterintuitive"
+    ]
+  },
+  {
+    "id": "q08",
+    "q": "What cron syntax and timezone format does a scheduled DeepSpace task use?",
+    "expect": "guides/scheduled-jobs",
+    "tags": [
+      "cron"
+    ]
+  },
+  {
+    "id": "q09",
+    "q": "What is the exact maximum character count accepted by managed knowledge search?",
+    "expect": "bindings/knowledge",
+    "tags": [
+      "boundary"
+    ]
+  },
+  {
+    "id": "q10",
+    "q": "Can one app declare two managed AI Search bindings with different instance names?",
+    "expect": "bindings/knowledge",
+    "tags": [
+      "binding-cardinality"
+    ]
+  },
+  {
+    "id": "q11",
+    "q": "Which knowledge search mode is cheapest per thousand queries?",
+    "expect": "bindings/knowledge",
+    "tags": [
+      "pricing",
+      "contrast"
+    ]
+  },
+  {
+    "id": "q12",
+    "q": "Who pays when an integration is configured as developer billing, and what happens for a signed-out caller?",
+    "expect": "guides/external-apis",
+    "tags": [
+      "billing",
+      "anonymous"
+    ]
+  },
+  {
+    "id": "q13",
+    "q": "Does the platform throttle every owner-paid integration enough that my app can skip its own spend limit?",
+    "expect": "guides/external-apis",
+    "tags": [
+      "rate-limit",
+      "security"
+    ]
+  },
+  {
+    "id": "q14",
+    "q": "How does a Google feature tell the UI that one OAuth scope is missing?",
+    "expect": "guides/google-oauth",
+    "tags": [
+      "oauth",
+      "response-shape"
+    ]
+  },
+  {
+    "id": "q15",
+    "q": "Should google/* be billed to the developer or each end user?",
+    "expect": "guides/google-oauth",
+    "tags": [
+      "billing",
+      "oauth"
+    ]
+  },
+  {
+    "id": "q16",
+    "q": "Can I protect a paid feature by checking only that tier equals pro?",
+    "expect": "guides/payments",
+    "tags": [
+      "entitlement",
+      "past-due"
+    ]
+  },
+  {
+    "id": "q17",
+    "q": "What are the minimum monthly, yearly, and one-time payment amounts?",
+    "expect": "guides/payments",
+    "tags": [
+      "pricing",
+      "boundary"
+    ]
+  },
+  {
+    "id": "q18",
+    "q": "Do the drop-in messaging schemas implement private DMs?",
+    "expect": "guides/messaging",
+    "tags": [
+      "privacy",
+      "scope"
+    ]
+  },
+  {
+    "id": "q19",
+    "q": "Which Yjs hook opens a standalone document that is not attached to an existing record?",
+    "expect": "guides/collaborative-editing",
+    "tags": [
+      "yjs",
+      "standalone"
+    ]
+  },
+  {
+    "id": "q20",
+    "q": "When I rename an app, which identifier remains the stable identity for data and secrets?",
+    "expect": "concepts/deployment",
+    "tags": [
+      "identity",
+      "rename"
+    ]
+  }
+]

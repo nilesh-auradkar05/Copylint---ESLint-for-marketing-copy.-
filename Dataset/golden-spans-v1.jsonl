@@ -1,0 +1,16 @@
+{"id":"s01","op":"locateQuote","body":"abc DeepSpace xyz","quote":"DeepSpace","from":0,"expected":[4,13],"property":"exact"}
+{"id":"s02","op":"locateQuote","body":"claim A; claim A; claim A","quote":"claim A","from":8,"expected":[9,16],"property":"repeated-from"}
+{"id":"s03","op":"locateQuote","body":"DeepSpace   uses\nCloudflare","quote":"DeepSpace uses Cloudflare","from":0,"expected":[0,27],"property":"whitespace-normalized"}
+{"id":"s04","op":"locateQuote","body":"DeepSpace uses “member” by default","quote":"DeepSpace uses \"member\" by default","from":0,"expected":[0,34],"property":"curly-double-quotes"}
+{"id":"s05","op":"locateQuote","body":"It’s server-side.","quote":"It's server-side.","from":0,"expected":[0,17],"property":"curly-apostrophe"}
+{"id":"s06","op":"locateQuote","body":"Nothing here","quote":"missing","from":0,"expected":null,"property":"absent"}
+{"id":"s07","op":"locateQuote","body":"abc","quote":"","from":0,"expected":null,"property":"empty-quote"}
+{"id":"s08","op":"locateQuote","body":"A\t\tB   C","quote":"A B C","from":0,"expected":[0,8],"property":"mixed-whitespace"}
+{"id":"s09","op":"segmentBySpans","body":"abcdef","claims":[],"expected":[{"text":"abcdef","claimIds":[],"verdict":null}],"property":"no-claims"}
+{"id":"s10","op":"segmentBySpans","body":"abcdef","claims":[{"id":"a","span":[1,4],"verdict":"supported"}],"expected":[{"text":"a","claimIds":[],"verdict":null},{"text":"bcd","claimIds":["a"],"verdict":"supported"},{"text":"ef","claimIds":[],"verdict":null}],"property":"single-span"}
+{"id":"s11","op":"segmentBySpans","body":"abcdef","claims":[{"id":"a","span":[1,5],"verdict":"supported"},{"id":"b","span":[2,4],"verdict":"unsupported"}],"expected_priority":"unsupported","property":"overlap-supported-unsupported"}
+{"id":"s12","op":"segmentBySpans","body":"abcdef","claims":[{"id":"a","span":[1,5],"verdict":"unsupported"},{"id":"b","span":[2,4],"verdict":"contradicted"}],"expected_priority":"contradicted","property":"overlap-unsupported-contradicted"}
+{"id":"s13","op":"segmentBySpans","body":"abcdef","claims":[{"id":"a","span":[-10,2],"verdict":"supported"}],"expected_coverage":"abcdef","property":"clamp-negative-start"}
+{"id":"s14","op":"segmentBySpans","body":"abcdef","claims":[{"id":"a","span":[4,99],"verdict":"supported"}],"expected_coverage":"abcdef","property":"clamp-end"}
+{"id":"s15","op":"segmentBySpans","body":"abcdef","claims":[{"id":"a","span":[3,3],"verdict":"supported"}],"expected":[{"text":"abcdef","claimIds":[],"verdict":null}],"property":"zero-length-filtered"}
+{"id":"s16","op":"segmentBySpans","body":"abcdef","claims":[{"id":"a","span":[5,2],"verdict":"contradicted"}],"expected":[{"text":"abcdef","claimIds":[],"verdict":null}],"property":"reversed-filtered"}

@@ -1,0 +1,8 @@
+{"id":"r01","changedPages":["guides/external-apis"],"claimEvidencePages":["guides/external-apis"],"expected":"rejudge","reason":"evidence intersects changed page"}
+{"id":"r02","changedPages":["guides/external-apis"],"claimEvidencePages":["concepts/permissions"],"expected":"carry-forward","reason":"no intersection"}
+{"id":"r03","changedPages":["guides/external-apis","concepts/permissions"],"claimEvidencePages":["concepts/permissions"],"expected":"rejudge","reason":"one-page intersection is enough"}
+{"id":"r04","changedPages":[],"claimEvidencePages":["concepts/permissions"],"expected":"carry-forward","reason":"nothing changed"}
+{"id":"r05","changedPages":["bindings/knowledge"],"claimEvidencePages":[],"expected":"carry-forward","reason":"claim has no cited changed page"}
+{"id":"r06","changedPages":["bindings/knowledge"],"claimEvidencePages":["bindings/knowledge","get-started/introduction"],"expected":"rejudge","reason":"multi-page evidence intersects"}
+{"id":"r07","changedPages":["guides/google-oauth"],"claimEvidencePages":["guides/external-apis","guides/google-oauth"],"expected":"rejudge","reason":"secondary evidence page changed"}
+{"id":"r08","changedPages":["guides/payments"],"claimEvidencePages":["guides/payments"],"expected":"rejudge","reason":"exact match"}
