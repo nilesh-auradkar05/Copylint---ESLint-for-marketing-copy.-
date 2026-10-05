@@ -11,7 +11,7 @@
 | T-001 | Repo, scaffold, GitHub source, first deploy | Human + A | S0 | – | 1.5 h | IN_PROGRESS (scaffold, GitHub remote, login, app id done; first deploy + `app source` check pending) |
 | T-002 | Schemas + RBAC (7 collections) | A | S1 | T-001 | 1.5 h | REVIEW (merged; reviewer APPROVE; live RBAC matrix not yet run) |
 | T-003 | Engine contracts: ids, spans, gate, citations | A | S1 | T-001 | 1.5 h | DONE |
-| T-004 | Knowledge binding + `sync-sources` job + probes | A | S1 | T-002 | 2 h | TODO |
+| T-004 | Knowledge binding + `sync-sources` job + probes | A | S1 | T-002 | 2 h | IN_PROGRESS (A/review loop 1: 1 BLOCKER) |
 | T-005 | `verify-draft` job (extract → retrieve → judge → write) | A | S1 | T-003, T-004 | 3 h | TODO |
 | T-006 | `POST /api/drafts/:id/check` route + quota | A | S1 | T-002, T-005 | 1 h | TODO |
 | T-007 | Golden-set eval runner + prompt iteration | A | S2 | T-005 | 2 h | TODO |
