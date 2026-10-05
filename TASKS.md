@@ -29,6 +29,7 @@
 | T-017 | Presence on claim cards *(stretch)* | B | S3 | T-011 | 1 h | TODO |
 | T-023 | Security + cost hardening pass | A + reviewer | S3 | all core | 1.5 h | TODO |
 | T-022 | Seed demo, README, SUBMISSION, final deploy + smoke | Human | S3 | all core | 3 h | TODO |
+| T-024 | **Enhancement:** hosted public page for a publication | A | post-core | T-014, T-016 | 1 h | TODO (Enhancement; not started; needs human go, adds an anonymous-readable endpoint) |
 
 ---
 
@@ -212,6 +213,17 @@
 - T-022.5 Submitted in the portal before 11:59 PM ET.
 
 ---
+
+## T-024 · Hosted public page for a publication · Lane A · *Enhancement*
+**Why:** today "Publish" only records an external URL; the app hosts nothing, so a placeholder URL leads nowhere.
+**Spec:** not in SPEC yet; add to §6/§7 when started. **ADR:** 0003 (gate unchanged), 0004 (roles: this adds the first anonymous read).
+
+**Acceptance:**
+- T-024.1 `GET /p/<publicationId>` renders the title and the exact checked text of the published version, read-only, without sign-in.
+- T-024.2 A public endpoint returns only `{title, channel, body, publishedAt}` for a `live` publication; unknown ids and non-live publications answer 404. No claims, sign-offs, user ids, names, or emails. Collections stay closed to `'*'` (no schema permission change).
+- T-024.3 The URL field in the publish form is optional: blank records the app's own `/p/<id>` link; a given http(s) URL behaves as today. `publishDraft` still re-computes the gate server-side.
+- T-024.4 The post-publish confirmation links to whichever URL applies and opens it in a new window.
+- T-024.5 Reviewer ticks AGENTS.md §6 with the new endpoint in scope (no data beyond T-024.2 is reachable anonymously; responses are cacheable only for `live` rows).
 
 ## Parking lot (do NOT build during this window)
 - Exa web-evidence tier
