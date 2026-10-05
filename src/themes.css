@@ -102,7 +102,7 @@
 .proof-review-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2rem; align-items: start; }
 .proof-review-columns > *, .proof-claim { min-width: 0; }
 .proof-snapshot { white-space: pre-wrap; font-size: 1rem; line-height: 1.9; margin-top: 1rem; }
-.proof-highlight { display: inline; height: auto; padding: 0; white-space: pre-wrap; font: inherit; border-radius: 0; box-decoration-break: clone; }
+.proof-highlight { display: inline; height: auto; padding: 0; white-space: pre-wrap; text-align: left; font: inherit; border-radius: 0; box-decoration-break: clone; }
 .proof-highlight:hover { background: var(--color-accent); color: var(--color-accent-foreground); }
 .proof-highlight:focus-visible, .proof-claim:focus { outline: 2px solid var(--color-ring); outline-offset: 4px; }
 .proof-claims, .proof-review-skeleton { display: grid; gap: 1.25rem; }

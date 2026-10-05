@@ -11,8 +11,8 @@ import { segmentBySpans } from '@/engine/spans'
 type ReviewRoomProps = {
   draft: { recordId: string; data: { title: string; channel: string; body: string } }
   version?: Version
-  claims: Claim[]
-  signoffs: Signoff[]
+  claims: readonly Claim[]
+  signoffs: readonly Signoff[]
   kbVersion: number
   loading?: boolean
   failureReason?: string
@@ -63,7 +63,7 @@ export function ReviewRoom({ draft, version, claims, signoffs, kbVersion, loadin
         <h2 className="proof-kicker">Draft snapshot</h2>
         <div role="region" aria-label="Draft snapshot" className="proof-snapshot">{segments.map((segment, index) => {
           const claim = currentClaims.find(c => segment.claimIds.includes(c.id))
-          return claim ? <Button key={index} id={spanId(index)} variant="ghost"
+          return claim ? <Button key={index} id={spanId(index)} variant="ghost" disabled={loading}
             className={`proof-highlight proof-${segment.verdict}`} aria-label={`${segment.verdict}: ${segment.text}`}
             aria-controls={cardId(claim)} onClick={() => focus(cardId(claim))}>{segment.text}</Button>
             : <span key={index}>{segment.text}</span>
