@@ -1,11 +1,11 @@
-# todo.md — live working list (Mon Oct 5, 2:05 PM ET)
+# todo.md — live working list (Mon Oct 5, 3:15 PM ET)
 
 Short-horizon checklist for the human and both orchestrators. `TASKS.md` is the backlog; this is "right now".
 Update at the start and end of every session. Keep it under one screen.
 
 ## Now
 - [ ] Human: fast-forward `main` to `lane-a` and push (`git -C ../copylint merge --ff-only lane-a && git -C ../copylint push`)
-- [ ] Human: first `npx deepspace deploy` from the primary checkout (T-001). Unblocks the knowledge binding and every live check below
+- [x] Human: first `npx deepspace deploy` from the primary checkout (T-001), done Oct 5. Unblocks the knowledge binding and every live check below
 - [x] Admin test user: `Engineer` promoted locally via `/api/debug/set-role` (per worktree; lane-b and the deployed app need their own)
 - [ ] Human DECISION (RBAC, blocks nothing but is a privacy hole): `draft_versions` and `claims` are `member read:true` and the check route stores the full draft body on the version, so any member can read every checked draft over the socket. Options: drop `body` from versions, or make versions/claims readable only by the draft's owner and collaborators
 - [ ] Human: run the FIRST real sync from the deployed app, not local dev (they share one knowledge base but not the `sources` table: syncing from both duplicates every page)
