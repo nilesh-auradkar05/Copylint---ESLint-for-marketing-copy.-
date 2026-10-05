@@ -6,7 +6,8 @@ Update at the start and end of every session. Keep it under one screen.
 ## Now
 - [ ] Human: fast-forward `main` to `lane-a` and push (`git -C ../copylint merge --ff-only lane-a && git -C ../copylint push`)
 - [ ] Human: first `npx deepspace deploy` from the primary checkout (T-001). Unblocks the knowledge binding and every live check below
-- [ ] Human: decide how tests get an **admin** user (SPEC §11 correction 8). Blocks T-002.5, T-004.5 admin-202
+- [x] Admin test user: `Engineer` promoted locally via `/api/debug/set-role` (per worktree; lane-b and the deployed app need their own)
+- [ ] Human: run the FIRST real sync from the deployed app, not local dev (they share one knowledge base but not the `sources` table: syncing from both duplicates every page)
 
 ## Next up
 - Lane A: T-005 (READY) → T-006 → T-014 → T-020 → T-023. T-007 eval needs T-005 live
@@ -19,7 +20,7 @@ Update at the start and end of every session. Keep it under one screen.
 - T-004.2 click *Sync now* as owner: 25 sources `completed`, `kb_state.version` 1; second sync = 0 adds
 - T-004.6 run `eval/probes.json`, log hit-rate. Check `chunk.filename` is the bare `concepts__permissions.md`; if it is folder-prefixed, `retrieve` drops every chunk
 - Does a same-name re-upload replace the item or add a second one? Does `kb.remove` of a missing id 404?
-- T-002 live RBAC matrix (21 Playwright cases still `fixme`)
+- T-002 live RBAC: 28/28 on the local server; smoke it once on the deployed app
 
 ## Known gaps carried forward
 - `sync.ts` assumes one kb item per page (no guard); a bump-write failure on the success path loses the bump
