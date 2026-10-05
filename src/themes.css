@@ -95,3 +95,26 @@
 .proof-landing a:hover, .proof-page a:hover { text-decoration: underline; }
 .proof-landing a:focus-visible, .proof-page a:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 4px; }
 @media (max-width: 720px) { .proof-hero { grid-template-columns: 1fr; padding: 3rem 0; gap: 2rem; } .proof-sheet { padding: 1.25rem; } .proof-wordmark span { display: none; } }
+.proof-review { max-width: 1280px; overflow-wrap: anywhere; }
+.proof-review-header { flex-wrap: wrap; align-items: flex-start; margin-bottom: 2rem; }
+.proof-review-header > div { min-width: 0; flex: 1 1 20rem; }
+.proof-review-header .proof-source { text-decoration: none; }
+.proof-review-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2rem; align-items: start; }
+.proof-review-columns > *, .proof-claim { min-width: 0; }
+.proof-snapshot { white-space: pre-wrap; font-size: 1rem; line-height: 1.9; margin-top: 1rem; }
+.proof-highlight { display: inline; height: auto; padding: 0; white-space: pre-wrap; font: inherit; border-radius: 0; box-decoration-break: clone; }
+.proof-highlight:hover { background: var(--color-accent); color: var(--color-accent-foreground); }
+.proof-highlight:focus-visible, .proof-claim:focus { outline: 2px solid var(--color-ring); outline-offset: 4px; }
+.proof-claims, .proof-review-skeleton { display: grid; gap: 1.25rem; }
+.proof-claim { animation: proof-claim-in 180ms ease-out; }
+.proof-claim .proof-row { flex-wrap: wrap; gap: 0.5rem; }
+.proof-claim .proof-verdict { gap: 0.35rem; }
+.proof-claim h3 { font-size: 1.1rem; font-weight: 600; margin: 1rem 0; }
+.proof-quote { font-family: ui-monospace, monospace; border-left: 2px solid var(--color-border); padding-left: 0.75rem; }
+.proof-evidence { border-top: 1px solid var(--color-border); margin-top: 1rem; padding-top: 1rem; }
+.proof-evidence blockquote { margin-top: 0.5rem; }
+.proof-review-notice { border-left: 2px solid var(--color-input); padding: 0.75rem 1rem; margin-bottom: 1.5rem; background: var(--color-muted); }
+.proof-review-notice button { margin-top: 0.75rem; }
+@keyframes proof-claim-in { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 720px) { .proof-review-columns { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .proof-claim { animation: none; } }
