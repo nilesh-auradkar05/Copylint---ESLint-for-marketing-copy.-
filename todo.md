@@ -1,31 +1,32 @@
-# todo.md — live working list (Sat Oct 3)
+# todo.md — live working list (Sun Oct 4, 9:05 PM ET)
 
 Short-horizon checklist for the human and both orchestrators. `TASKS.md` is the backlog; this is "right now".
 Update at the start and end of every session. Keep it under one screen.
 
-## Now (S0 — first 90 min)
-- [ ] Create GitHub repo `groundtruth` (empty)
-- [ ] `node --version` (supported line per docs) · `npm --version` ≥ 11.6
-- [ ] `npm create deepspace@latest groundtruth` → git init → add remote → first commit → push
-- [ ] Copy this docs pack into repo root → commit `docs: agent pack`
-- [ ] `npx deepspace auth whoami --json` → correct owner account
-- [ ] `npx deepspace deploy` → `npx deepspace app source` shows **GitHub**
-- [ ] Worktrees: `../gt-lane-a` (Claude Code), `../gt-lane-b` (Codex); confirm distinct dev ports
-- [ ] Start Claude Code (opus-5-5, high) in lane A: "Read CLAUDE.md, then start T-002 and T-003 per AGENTS.md section 3"
-- [ ] Start Codex (gpt-6-astra, high) in lane B: "Read AGENTS.md, then run the task loop for T-010"
+## Now
+- [ ] Human: fast-forward `main` to `lane-a` and push (`git -C ../copylint merge --ff-only lane-a && git -C ../copylint push`)
+- [ ] Human: first `npx deepspace deploy` from the primary checkout (T-001). Unblocks the knowledge binding and every live check below
+- [ ] Human: decide how tests get an **admin** user (SPEC §11 correction 8). Blocks T-002.5, T-004.5 admin-202
 
 ## Next up
-- Lane A: T-002 → T-003 → T-004 → T-005 → T-006
-- Lane B: T-010 → T-011 (fixtures from T-003)
-- Human: review RBAC matrix (T-002) yourself; run probe queries (T-004.6); log both
+- Lane A: T-005 (READY) → T-006 → T-014 → T-020 → T-023. T-007 eval needs T-005 live
+- Lane B: T-010b is unblocked (T-002/T-003 merged); T-011 fixtures in `eval/fixtures/review-room.json`
+- Lane B note: `AppJobRoom` socket is now admin-write / member-read. Members enqueue only via the check route (T-006)
 
-## Waiting on / blocked
-- T-010 REVIEW in `/tmp/groundtruth-lane-b-t010`, branch `t/T-010-app-shell`; stop after reviewer verdict, no merge/deploy. Fixture preview: `http://127.0.0.1:5174`.
-- T-001 scaffold landed concurrently and Lane B rebased onto main. T-010 fixture review continues; live route/persistence integration split to T-010b pending T-002/T-003 contracts.
-- Verified: type-check/lint and 8 fixture tests pass; browser retry preserves inputs and creates a fixture row; readiness disables writes; dark layout fits 390px. Full Vitest blocked by `__APP_ID__`; DeepSpace tests blocked by `not_authenticated`.
+## Waiting on the human, after first deploy (T-004)
+- T-004.1 `[[ai_search]]` provisions; `npx deepspace app usage` before/after the first sync
+- T-004.2 click *Sync now* as owner: 25 sources `completed`, `kb_state.version` 1; second sync = 0 adds
+- T-004.6 run `eval/probes.json`, log hit-rate. Check `chunk.filename` is the bare `concepts__permissions.md`; if it is folder-prefixed, `retrieve` drops every chunk
+- Does a same-name re-upload replace the item or add a second one? Does `kb.remove` of a missing id 404?
+- T-002 live RBAC matrix (21 Playwright cases still `fixme`)
 
-## Decisions made today
-- Plan compressed to 3 sprints (Sat/Sun/Mon); cut line fixed in docs/sprint-plan.md
+## Known gaps carried forward
+- `sync.ts` assumes one kb item per page (no guard); a bump-write failure on the success path loses the bump
+- Old kb items are removed before the new ones are indexed (page briefly unsearchable) — decide in T-020
+- No per-user quota on admin-only `/api/admin/sync`
+
+## Behind plan
+- S1 (due Sat) still open: T-005, T-006. Freeze is Mon 6:00 PM ET. Cut line in `docs/sprint-plan.md` will apply
 
 ## End-of-day checks
 - [ ] Live URL tried signed-in
