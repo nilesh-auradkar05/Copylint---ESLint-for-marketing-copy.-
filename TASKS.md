@@ -22,8 +22,8 @@
 | T-012 | Sign-off UI + derived badge | B | S2 | T-011, T-002 | 1.5 h | REVIEW (taken over by A with human approval; merged to lane-a; reviewer APPROVE; live sign-off + publish check pending) |
 | T-013 | Accept fix → new version → re-check | B | S2 | T-011, T-006 | 1 h | REVIEW (taken over by A at the human's request; apply-all via Fix and publish, no per-claim Accept button; reviewer APPROVE; live check pending) |
 | T-014 | `publishDraft` server action (server-side gate) | A | S2 | T-003, T-002 | 1.5 h | REVIEW (A; merged to lane-a; reviewer APPROVE; 648 unit pass; live action smoke pending deploy) |
-| T-015 | Two-user Playwright spec (live sync + forged writes) | B | S2 | T-012 | 1.5 h | TODO |
-| T-016 | Publications page + admin sources page + publish modal | B | S2 | T-014 | 2 h | TODO |
+| T-015 | Two-user Playwright spec (live sync + forged writes) | B | S2 | T-012 | 1.5 h | IN_PROGRESS (A/test-author; picked up for Lane B) |
+| T-016 | Publications page + admin sources page + publish modal | B | S2 | T-014 | 2 h | IN_PROGRESS (A/test-author; finishing .2 /publications and .4 /admin/users for Lane B; .1 and .3 Sync now already on lane-a; .3 cron row waits on T-020) |
 | T-020 | Drift: cron + reverify with carry-forward + stale flags | A | S2→S3 | T-004, T-005, T-014 | 3 h | TODO |
 | T-021 | Resend stale alert *(cut first)* | A | S3 | T-020 | 1 h | TODO |
 | T-017 | Presence on claim cards *(stretch)* | B | S3 | T-011 | 1 h | TODO |
