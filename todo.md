@@ -1,14 +1,17 @@
-# todo.md — live working list (Mon Oct 5, 9:05 PM ET)
+# todo.md — live working list (Mon Oct 5, 9:30 PM ET)
 
 Short-horizon checklist for the human and both orchestrators. `TASKS.md` is the backlog; this is "right now".
 Update at the start and end of every session. Keep it under one screen.
 
 ## Now
+- [ ] Human, BEFORE SUBMITTING: deploy `main` after fast-forwarding to `lane-a`. It carries the T-023 fix: until it is live, anyone signed out can call owner-billed integrations through `/api/integrations/<name>/<endpoint>` on the owner's bill
+- [ ] Human, after that deploy: (1) `curl -s -X POST -d '{}' https://copylint.app.space/api/integrations/anthropic/x` must answer `{"error":"not_found"}`; (2) run one real check on a draft to confirm the job still works
+- [ ] Human: `SUBMISSION.md` is still mostly the template: wrong live URL (says groundtruth.app.space, app is copylint.app.space), placeholder repo and accounts, and the "What I built" paragraph says a daily job flags stale posts, which is not shipped (T-020 not started)
 - [x] (done 9:02 PM, main = lane-a = b0f5ce9, release #16) Human: fast-forward `main` to `lane-a` and push (`git -C ../copylint merge --ff-only lane-a && git -C ../copylint push`)
 - [x] Human: first `npx deepspace deploy` from the primary checkout (T-001), done Oct 5. Unblocks the knowledge binding and every live check below
 - [x] Admin test user: `Engineer` promoted locally via `/api/debug/set-role` (per worktree; lane-b and the deployed app need their own)
-- [ ] Human DECISION (RBAC, blocks nothing but is a privacy hole): `draft_versions` and `claims` are `member read:true` and the check route stores the full draft body on the version, so any member can read every checked draft over the socket. Options: drop `body` from versions, or make versions/claims readable only by the draft's owner and collaborators
-- [ ] Human: run the FIRST real sync from the deployed app, not local dev (they share one knowledge base but not the `sources` table: syncing from both duplicates every page)
+- [x] (decided Oct 5 9:10 PM: document only, written into SUBMISSION.md) Human DECISION (RBAC, blocks nothing but is a privacy hole): `draft_versions` and `claims` are `member read:true` and the check route stores the full draft body on the version, so any member can read every checked draft over the socket. Options: drop `body` from versions, or make versions/claims readable only by the draft's owner and collaborators
+- [x] (human confirmed done, Oct 5) Human: run the FIRST real sync from the deployed app, not local dev (they share one knowledge base but not the `sources` table: syncing from both duplicates every page)
 
 ## Next up
 - T-016 follow-up merged to `lane-a` (9:00 PM), deployed as release #16, human confirmed live: publication cards with entrance animation, *Make writer* on `/admin/users` (not on your own row). Human: redeploy, then look at `/publications` in light and dark; nobody has seen the cards in a browser

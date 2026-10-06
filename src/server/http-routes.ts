@@ -231,25 +231,21 @@ export function registerAuthAndIntegrationRoutes(app: Hono<AppContext>): void {
   app.all('/api/integrations/:name/:endpoint', async (c) => {
     const integrationName = c.req.param('name')
     const billingMode = integrations[integrationName]?.billing ?? 'developer'
+    // T-023: owner-billed integrations are closed at this client proxy. The app's model and
+    // knowledge calls run server-side in jobs; open, this route is an unmetered paid trigger on the owner's bill.
+    if (billingMode !== 'user') return c.json({ error: 'not_found' }, 404)
 
     const auth = await resolveAuth(c.req.raw, c.env)
-    if (!auth && billingMode === 'user') {
-      return c.json({ error: 'Sign in required for this integration' }, 401)
-    }
+    if (!auth) return c.json({ error: 'Sign in required for this integration' }, 401)
 
     const target = `/api/integrations/${integrationName}/${c.req.param('endpoint')}`
     const headers: Record<string, string> = {
       'Content-Type': c.req.header('Content-Type') ?? 'application/json',
     }
 
-    // The api-worker bills the JWT subject: developer mode uses the app owner;
-    // user mode forwards the caller. There is no client billing override.
-    if (billingMode === 'developer') {
-      headers['Authorization'] = `Bearer ${c.env.APP_OWNER_JWT}`
-    } else {
-      const token = c.req.header('Authorization')?.slice(7)
-      if (token) headers['Authorization'] = `Bearer ${token}`
-    }
+    // The api-worker bills the JWT subject, which here is always the caller.
+    const token = c.req.header('Authorization')?.slice(7)
+    if (token) headers['Authorization'] = `Bearer ${token}`
 
     // Identify this app for per-app integrations. Pre-first-deploy there is no
     // token, so omit both headers and let the api-worker fail closed.
