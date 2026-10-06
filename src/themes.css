@@ -94,6 +94,25 @@
 .proof-link, .proof-draft-title { text-underline-offset: 4px; }
 .proof-landing a:hover, .proof-page a:hover { text-decoration: underline; }
 .proof-landing a:focus-visible, .proof-page a:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 4px; }
+/* Publication cards: paper card, hairline border, status rule. The status word stays visible, so colour is never the only signal. */
+.proof-pub-grid { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
+.proof-pub-card { display: grid; gap: 0.35rem; align-content: start; height: 100%; background: var(--color-card); border: 1px solid var(--color-border); border-left: 3px solid var(--color-border); border-radius: var(--radius); padding: 1rem 1.15rem; overflow-wrap: anywhere; }
+.proof-pub-card[data-status="live"] { border-left-color: var(--color-verdict-supported); }
+.proof-pub-card[data-status="stale"] { border-left-color: var(--color-verdict-unsupported); }
+.proof-pub-channel, .proof-pub-url { font-family: ui-monospace, monospace; font-size: 0.75rem; }
+.proof-pub-channel { text-transform: uppercase; letter-spacing: 0.09em; color: var(--color-muted-foreground); margin: 0; }
+.proof-pub-title { font-family: Georgia, 'Times New Roman', serif; font-size: 1.3rem; line-height: 1.2; }
+.proof-pub-card p { margin: 0; }
+.proof-pub-card ul { margin: 0.35rem 0 0; padding-left: 1.1rem; font-family: ui-monospace, monospace; font-size: 0.75rem; }
+@keyframes proof-pub-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .proof-pub-grid > li { animation: proof-pub-in 240ms ease-out both; }
+  .proof-pub-grid > li:nth-child(2) { animation-delay: 40ms; } .proof-pub-grid > li:nth-child(3) { animation-delay: 80ms; }
+  .proof-pub-grid > li:nth-child(4) { animation-delay: 120ms; } .proof-pub-grid > li:nth-child(5) { animation-delay: 160ms; }
+  .proof-pub-grid > li:nth-child(n+6) { animation-delay: 200ms; }
+  .proof-pub-card { transition: transform 160ms ease-out, border-color 160ms ease-out; }
+  .proof-pub-card:hover, .proof-pub-card:focus-within { transform: translateY(-2px); border-color: var(--color-foreground); }
+}
 @media (max-width: 720px) { .proof-hero { grid-template-columns: 1fr; padding: 3rem 0; gap: 2rem; } .proof-sheet { padding: 1.25rem; } .proof-wordmark span { display: none; } }
 .proof-review { max-width: 1280px; overflow-wrap: anywhere; }
 .proof-review-header { flex-wrap: wrap; align-items: flex-start; margin-bottom: 2rem; }
