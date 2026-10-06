@@ -1,0 +1,87 @@
+{
+  "promptVersion": "p1",
+  "judgeModel": "claude-sonnet-5",
+  "file": "eval/golden-claims.jsonl",
+  "suite": null,
+  "modelCalls": 3,
+  "wallMs": 5862,
+  "summary": {
+    "counted": 3,
+    "accuracy": 1,
+    "contradictedPrecision": 1,
+    "contradictedRecall": 1,
+    "runErrors": 0,
+    "matrix": {
+      "supported": {
+        "supported": 2,
+        "contradicted": 0,
+        "unsupported": 0
+      },
+      "contradicted": {
+        "supported": 0,
+        "contradicted": 1,
+        "unsupported": 0
+      },
+      "unsupported": {
+        "supported": 0,
+        "contradicted": 0,
+        "unsupported": 0
+      }
+    }
+  },
+  "claims": [
+    {
+      "id": 1,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "concepts/architecture",
+        "get-started/introduction",
+        "index"
+      ],
+      "retrievedPages": [
+        "concepts/architecture",
+        "get-started/introduction",
+        "index",
+        "concepts/deployment"
+      ],
+      "reason": "Evidence explicitly states DeepSpace apps are normal Cloudflare Workers and that DeepSpace is built for real-time collaborative apps on Cloudflare Workers.",
+      "diagnosis": null
+    },
+    {
+      "id": 2,
+      "gold": "contradicted",
+      "predicted": "contradicted",
+      "citedPages": [
+        "concepts/deployment",
+        "concepts/architecture",
+        "get-started/introduction"
+      ],
+      "retrievedPages": [
+        "sdk-reference/worker/ai",
+        "concepts/architecture",
+        "get-started/introduction",
+        "concepts/deployment"
+      ],
+      "reason": "Evidence states DeepSpace deploys apps to Cloudflare Workers for Platforms via 'npx deepspace deploy', not Vercel. Vercel is only mentioned as the AI SDK provider, unrelated to deployment.",
+      "diagnosis": null
+    },
+    {
+      "id": 3,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "concepts/deployment"
+      ],
+      "retrievedPages": [
+        "concepts/deployment",
+        "concepts/architecture",
+        "index",
+        "get-started/quickstart",
+        "guides/secrets"
+      ],
+      "reason": "Evidence states npx deepspace deploy builds and uploads the app, returning a live <name>.app.space URL.",
+      "diagnosis": null
+    }
+  ]
+}
