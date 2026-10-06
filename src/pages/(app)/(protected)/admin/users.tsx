@@ -15,6 +15,7 @@ export default function UsersPage() {
       currentUserId={user.id}
       // Strip email, imageUrl and timestamps here (AGENTS.md section 6).
       users={users.map(u => ({ id: u.id, name: u.name, role: u.role }))}
-      onMakeEngineer={id => setRole(id, 'admin')} />
+      onMakeEngineer={id => setRole(id, 'admin')}
+      onMakeWriter={id => setRole(id, 'member')} />
   </section>
 }
