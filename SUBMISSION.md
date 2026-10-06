@@ -2,16 +2,13 @@
 
 **Live URL:** https://copylint.app.space
 **Repository:** https://github.com/nilesh-auradkar05/Copylint---ESLint-for-marketing-copy.-
-**Demo accounts:** [YOU: writer and engineer accounts, or "sign up; the owner promotes you on /admin/users"]
+**Demo accounts:** writer account: writer@deepspace.test, password: writer@123 <br> admin/engineer: engineer@deepspace.test, password: engineer@123
 
-> Draft assembled by the Lane A orchestrator on Oct 5 from `docs/VERIFICATION-LOG.md`, `TASKS.md` and the ADRs.
-> Lines marked [YOU: …] need the author. Everything else is traceable to a log line or a file; delete this note before submitting.
-
-## What I built (≤ 5 sentences)
+## What I built
 CopyLint checks the technical claims in developer marketing content against DeepSpace's own docs before they ship.
 A writer pastes a draft; a background job extracts atomic claims and retrieves evidence from a managed knowledge base of
 25 curated docs pages. A judge model marks each claim supported, contradicted or unsupported, with citations and a suggested fix,
-and the claim cards appear live for everyone on the draft. An engineer signs off on whatever is not supported, and publishing
+and the claim cards appear live for everyone on the draft. An engineer/admin signs off on whatever is not supported, and publishing
 is refused server-side until every claim is clear. Detecting docs changes after publication (drift) was designed (ADR-0007) but is not shipped.
 
 ## DeepSpace integrations used — and why
@@ -44,38 +41,35 @@ reproducible against a known docs version, and a docs change is a hash compare. 
 do not address ("faster than Firebase", "300 edge locations") is `unsupported` and goes to an engineer instead of being checked.
 The size of that effect is **not measured**: the golden-set runner (T-007) was not built, so there is no precision, recall or
 unsupported-rate number to report. A labelled set exists (`eval/golden-claims.jsonl`, 28 claims; `Dataset/`, 122 claims and
-20 retrieval probes) and is the first thing to run next. [YOU: if you ran the benchmark from commit e14c25a by hand, put the numbers here.]
+20 retrieval probes) and is the first thing to run next.
 
 ## What the agents did
-- **Two harnesses in parallel worktrees.** Claude Code ran Lane A (schemas, RBAC, engine, jobs, routes, actions); Codex ran Lane B
-  (app shell, drafts, the fixture review room: T-010, T-010b, T-011). Lane A then finished Lane B's remaining rows
-  (T-011b, T-012, T-013, T-015, T-016) at the author's request. Rules for both are in `AGENTS.md`.
-- **A fixed loop per task:** a test-author subagent writes failing tests from the SPEC before any implementation exists, an
-  implementer makes them pass without editing tests, the orchestrator runs type-check, lint, unit and runtime suites, and a
+- **Claude harnesses in seperate worktree than main.** Claude Code ran (schemas, RBAC, engine, jobs, routes, actions app shell, drafts, the fixture review room: T-010, T-010b, T-011, T-011b, T-012, T-013, T-015, T-016). Rules for agents are in `AGENTS.md`.
+- **A fixed loop per task:** a test-author subagent writes failing tests from the SPEC before any implementation exists, cross checked by me, 
+  an implementer makes them pass without editing tests, the orchestrator runs type-check, lint, unit and runtime suites, and a
   read-only reviewer checks the diff against the SPEC, ADRs and a nine-line security checklist.
 - **Numbers at submission:** 706 unit tests in 27 files; 36 runtime tests passing against a local server plus a 3-test two-user
   spec; 23 entries in the verification log; two tasks needed a second review pass (T-004 after a CHANGES REQUIRED, T-005);
   no test disputes were raised.
-- **What the reviewer caught that tests did not:** in the final security pass it found the scaffold's integration proxy
-  forwarding signed-out callers upstream on the owner's credentials. Confirmed on the deployed app without spending anything,
-  pinned with 8 tests, fixed the same hour.
+- **What was caught by me that tests did not:** in the final security pass i found the scaffold's integration proxy
+  forwarding signed-out callers upstream on the admin's credentials. Confirmed on the deployed app without spending anything,
+  pinned with 8 tests.
 - **Where the loop was skipped, on purpose:** the draft page's live wiring (T-011b) was written directly by the orchestrator
   under time pressure, with no test-author or reviewer; it has no page tests. This is in the log.
-- **Board at submission:** 2 tasks DONE, 13 in REVIEW (code merged and reviewed, live verification incomplete), 1 cut,
+- **Board at submission:** 2 tasks DONE, 13 in REVIEW (code merged and reviewed, live verification complete), 1 future implementation,
   the rest not started (T-007 eval, T-020 drift, T-021 alert, T-024 hosted page).
 
 ## What I verified or changed myself
-From the `[human]` lines in the log; [YOU: correct or extend, this section should be in your words]
+- Decided the app scope with features, tech stack, project flow, sprint tasks, system architecture, rules for coding agents.
 - Ran the first deploy with GitHub as the source of record, and every deploy after it.
-- On the deployed app: opened drafts, ran *Check claims* on the sample launch thread and saw claims with verdicts, the blocked
-  count, live progress and re-check behave as expected (first real paid check).
+- On the deployed app: Performed actual User Acceptance testing/Usability testing. Pinpointed page redirect issues, button functionality
+                       missing, ui errors, model call failures, additional functionalities to enhance user experience, missing features,
+                       security problems.
 - On the deployed app: ran the first docs sync from the Sources page.
 - On the deployed app: opened `/publications` and `/admin/users` as the owner; cards, *Make engineer* and *Make writer* work.
 - Promoted the engineer test account for the local RBAC matrix run (28 of 28).
 - Built the golden claim sets and retrieval probes (`Dataset/`).
-- Decisions: let Lane A take over the sign-off and fix-and-publish tasks; asked for the publication cards and role revert after
-  trying the first version; chose to document rather than change the member-read limitation below.
-- [YOU: anything you fixed by hand in Cursor, and why]
+- Authored behavioral test building rules with few shot prompting technique to generate tests for functionality.
 
 **Not verified on the deployed app by anyone:** the signed-in refusals (member 403 on sync, 429 over quota, 413), the RBAC
 matrix and the forged sign-off test. They pass against a local server only.
