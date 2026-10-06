@@ -4,6 +4,7 @@ export const CONFIG = {
     maxBodyChars: 20_000,
     maxClaims: 25,
     kbLimit: 5,
+    kbMaxSearchAttempts: 4,
     judgeConcurrency: 5,
     judgeMaxOutputTokens: 1_200,
     extractMaxOutputTokens: 8_000,
