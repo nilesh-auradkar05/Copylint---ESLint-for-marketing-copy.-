@@ -1,4 +1,4 @@
-# todo.md — live working list (Mon Oct 5, 5:25 PM ET)
+# todo.md — live working list (Mon Oct 5, 8:45 PM ET)
 
 Short-horizon checklist for the human and both orchestrators. `TASKS.md` is the backlog; this is "right now".
 Update at the start and end of every session. Keep it under one screen.
@@ -11,6 +11,9 @@ Update at the start and end of every session. Keep it under one screen.
 - [ ] Human: run the FIRST real sync from the deployed app, not local dev (they share one knowledge base but not the `sources` table: syncing from both duplicates every page)
 
 ## Next up
+- Lane B backlog closed out by Lane A (8:45 PM): T-016.2 `/publications`, T-016.4 `/admin/users` (*Make engineer*), T-015 two-user spec are merged to `lane-a`. Human before deploy: open `/publications` and `/admin/users` once as an admin and once as a member (never seen in a browser), then promote the deployed app's engineer account from `/admin/users`
+- Still open on Lane B rows: T-016.3 cron row + *Run now* (needs T-020's `docs-drift` task; `src/cron.ts` is empty); T-017 presence is CUT; `setRole` gives no feedback if the server refuses
+- Do NOT merge `t/T-012-signoff-ui` (gt-lane-b, 7 commits): superseded by `SignoffPanel` on lane-a. gt-lane-b also has uncommitted doc edits (TASKS, todo, sprint docs, VERIFICATION-LOG) that nobody has reconciled
 - Lane B STOP on T-012: Lane A shipped it (`src/components/SignoffPanel.tsx`, wired in `drafts/[id].tsx`) with human approval. `t/T-012-signoff-ui` and the uncommitted `SignoffReviewRoom.tsx` in gt-lane-b will conflict; do not merge them. The draft page also has an inline Publish form (T-016 modal and `/publications` still open)
 - Lane A: T-005, T-006, T-014 merged to lane-a (all REVIEW: live checks pending) → T-020 (next; not started) → T-023. T-007 eval needs T-005 live
 - Lane B note (T-016): `publishDraft` returns `{success:true, data:{ok:true, publicationId}}`, or `{success:true, data:{ok:false, reason:'not_ship_ready', blocking:[claimIds]}}`, or `{success:false, code, error}`. Params `{draftId, versionId, url}`, url http(s) only. Only the draft owner or a collaborator may publish; an admin who is neither is refused, so do not show them Publish
