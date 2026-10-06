@@ -91,7 +91,7 @@ In order of value:
 4. **Live verification of the signed-in security paths** on the deployed app.
 5. Hosted public page for a publication (T-024); today Publish only records an external URL.
 
-Known limitations found in the T-023 security pass (Oct 5), stated rather than fixed:
+Known limitations:
 - **Checked drafts are readable by every signed-in member.** `draft_versions` and `claims` are `member read: true`, and each version row stores the full draft body, so a member who is not a collaborator can still read any draft that has been checked (the `drafts` collection itself is owner and collaborators only). Decided on Oct 5 to document this instead of changing RBAC hours before the deadline. The fix is to make versions and claims readable only by the draft's owner and collaborators.
 - **Docs drift is not shipped.** `src/cron.ts` declares no tasks (T-020 not started), so nothing re-hashes the docs on a schedule and no publication is ever flagged stale; the Stale state on `/publications` and the cron row on `/admin/sources` have no data behind them. *Sync now* re-ingests changed pages but does not re-verify publications.
 - **Role changes give no feedback on refusal.** `setRole` is fire-and-forget; the role word on `/admin/users` only changes when the user list updates.
