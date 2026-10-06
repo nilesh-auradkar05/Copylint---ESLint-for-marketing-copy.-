@@ -39,9 +39,13 @@ Planned in ADR-0008 but **not shipped**: Cron (`docs-drift`) and the Resend stal
 Curated, versioned docs are the only source of truth (ADR-0001). Every verdict cites a page the team controls and is
 reproducible against a known docs version, and a docs change is a hash compare. The price is recall: a claim the 25 pages
 do not address ("faster than Firebase", "300 edge locations") is `unsupported` and goes to an engineer instead of being checked.
-The size of that effect is **not measured**: the golden-set runner (T-007) was not built, so there is no precision, recall or
-unsupported-rate number to report. A labelled set exists (`eval/golden-claims.jsonl`, 28 claims; `Dataset/`, 122 claims and
-20 retrieval probes) and is the first thing to run next.
+Measured on the 28-claim golden set (`eval/golden-claims.jsonl`, `npm run eval`, judge only, two runs on Oct 5):
+contradicted **precision 1.00** (target 0.80) and contradicted **recall 0.67** (target 0.85, not met); accuracy 0.82.
+The judge never called a true or uncovered claim false. What it misses, it misses for lack of evidence: 4 of the 5 remaining
+errors are claims for which the knowledge search returned nothing, so they fall to `unsupported` and go to an engineer.
+The first run scored recall 0.56; the eval showed that sentence-length claims often return zero chunks, a keyword fallback
+in the retrieve step fixed two of them, and the rest need the docs ingested in smaller sections. The larger set in `Dataset/`
+(122 claims, 20 retrieval probes) was not run: at about $0.03 per judged claim it would have used most of the remaining credits.
 
 ## What the agents did
 - **Claude harnesses in seperate worktree than main.** Claude Code ran (schemas, RBAC, engine, jobs, routes, actions app shell, drafts, the fixture review room: T-010, T-010b, T-011, T-011b, T-012, T-013, T-015, T-016). Rules for agents are in `AGENTS.md`.
@@ -57,7 +61,7 @@ unsupported-rate number to report. A labelled set exists (`eval/golden-claims.js
 - **Where the loop was skipped, on purpose:** the draft page's live wiring (T-011b) was written directly by the orchestrator
   under time pressure, with no test-author or reviewer; it has no page tests. This is in the log.
 - **Board at submission:** 2 tasks DONE, 13 in REVIEW (code merged and reviewed, live verification complete), 1 future implementation,
-  the rest not started (T-007 eval, T-020 drift, T-021 alert, T-024 hosted page).
+  the rest not started (T-020 drift, T-021 alert, T-024 hosted page).
 
 ## What I verified or changed myself
 - Decided the app scope with features, tech stack, project flow, sprint tasks, system architecture, rules for coding agents.
@@ -82,7 +86,7 @@ limited to 20 checks per day.
 ## Unfinished / next
 In order of value:
 1. **Docs drift (T-020).** The headline "re-lint when the docs change" is not shipped; see below.
-2. **Golden-set eval (T-007).** No measured judge quality yet.
+2. **Retrieval recall.** Contradicted recall is 0.67 against a 0.85 target because the knowledge search returns nothing for some claims; ingest the docs by section and re-run the eval, then the 122-claim set. One docs page (`guides/external-apis`) is in the knowledge base with an indexing error and needs a forced re-ingest.
 3. **Restrict checked drafts to their owner and collaborators.** See below.
 4. **Live verification of the signed-in security paths** on the deployed app.
 5. Hosted public page for a publication (T-024); today Publish only records an external URL.

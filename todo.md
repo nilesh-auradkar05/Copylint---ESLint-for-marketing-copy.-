@@ -1,9 +1,12 @@
-# todo.md — live working list (Mon Oct 5, 9:15 PM ET)
+# todo.md — live working list (Mon Oct 5, 10:34 PM ET)
 
 Short-horizon checklist for the human and both orchestrators. `TASKS.md` is the backlog; this is "right now".
 Update at the start and end of every session. Keep it under one screen.
 
 ## Now
+- [ ] Human: deploy once more if you want the T-007 retrieval fallback live (engine change in `src/engine/retrieve.ts`; without it about a quarter of claims reach the judge with no evidence). After deploying, run one real check
+- [ ] Human, optional: `guides/external-apis` is in the knowledge base with `error: network_connection_lost`; *Sync now* will not retry it while its hash is unchanged
+- Credits: 243.7 of 500 left after two eval runs ($0.82 and $0.86). Do not run `npm run eval` again tonight
 - [x] (done, release #17) Human, BEFORE SUBMITTING: deploy `main` after fast-forwarding to `lane-a`. It carries the T-023 fix: until it is live, anyone signed out can call owner-billed integrations through `/api/integrations/<name>/<endpoint>` on the owner's bill
 - [x] (both pass) Human, after that deploy: (1) `curl -s -X POST -d '{}' https://copylint.app.space/api/integrations/anthropic/x` must answer `{"error":"not_found"}`; (2) run one real check on a draft to confirm the job still works
 - [ ] Human: `SUBMISSION.md` is still mostly the template: wrong live URL (says groundtruth.app.space, app is copylint.app.space), placeholder repo and accounts, and the "What I built" paragraph says a daily job flags stale posts, which is not shipped (T-020 not started)

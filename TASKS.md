@@ -14,7 +14,7 @@
 | T-004 | Knowledge binding + `sync-sources` job + probes | A | S1 | T-002 | 2 h | REVIEW (merged to lane-a; reviewer APPROVE; live checks .1/.2/.5/.6 need first deploy + human) |
 | T-005 | `verify-draft` job (extract → retrieve → judge → write) | A | S1 | T-003, T-004 | 3 h | REVIEW (merged to lane-a; reviewer APPROVE on pass 2; live seed-draft smoke needs T-006 route + first deploy + human) |
 | T-006 | `POST /api/drafts/:id/check` route + quota | A | S1 | T-002, T-005 | 1 h | REVIEW (merged to lane-a; reviewer APPROVE; live 401/404 pass locally; live 202 is paid, needs first deploy + human) |
-| T-007 | Golden-set eval runner + prompt iteration | A | S2 | T-005 | 2 h | IN_PROGRESS (A/test-author; runner as a local script over the shared knowledge base, capped runs) |
+| T-007 | Golden-set eval runner + prompt iteration | A | S2 | T-005 | 2 h | REVIEW (A; .1 runner + confusion matrix and P/R; .2 run #1 logged; .3 one retrieval iteration instead of a prompt iteration, run #2 logged; .4 every miss diagnosed; contradicted precision 1.00 PASS, recall 0.67 BELOW the 0.85 target; reviewer APPROVE; fallback needs deploy) |
 | T-010 | App shell, landing, drafts list/new, design tokens | B | S1 | T-001 | 2.5 h | REVIEW |
 | T-010b | Wire T-010 draft views to live contracts and app navigation | B | S1 | T-010, T-002, T-003 | 0.5 h | REVIEW (B; reviewer APPROVE; 503 unit + 16 browser pass; deploy/live smoke pending) |
 | T-011 | Review room (fixtures first, then live data) | B | S1→S2 | T-003 (contracts), T-010 | 3.5 h | REVIEW (B; fixture APPROVE; 517 unit pass; runtime 34 pass / 4 admin-setup failures / 1 paid skip; T-011b pending) |
