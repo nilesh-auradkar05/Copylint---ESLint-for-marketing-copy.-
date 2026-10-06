@@ -24,7 +24,7 @@ export function UsersTable({ users, currentUserId, ready, onMakeEngineer, onMake
           <td>
             {u.role !== 'admin' && <button type="button" aria-label={`Make engineer: ${name}`} disabled={!ready || busyId === u.id} onClick={() => change(u.id, onMakeEngineer)}>Make engineer</button>}
             {/* Never on the current user's own row: stops an admin locking themselves out. */}
-            {u.role === 'admin' && u.id !== currentUserId && onMakeWriter && <button type="button" aria-label={`Make writer: ${name}`} disabled={!ready || busyId === u.id} onClick={() => change(u.id, onMakeWriter)}>Make writer</button>}
+            {u.role === 'admin' && currentUserId !== undefined && u.id !== currentUserId && onMakeWriter && <button type="button" aria-label={`Make writer: ${name}`} disabled={!ready || busyId === u.id} onClick={() => change(u.id, onMakeWriter)}>Make writer</button>}
           </td>
         </tr>
       })}</tbody></table>

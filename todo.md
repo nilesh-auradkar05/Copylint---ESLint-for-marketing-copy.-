@@ -11,6 +11,7 @@ Update at the start and end of every session. Keep it under one screen.
 - [ ] Human: run the FIRST real sync from the deployed app, not local dev (they share one knowledge base but not the `sources` table: syncing from both duplicates every page)
 
 ## Next up
+- T-016 follow-up merged to `lane-a` (9:20 PM): publication cards with entrance animation, *Make writer* on `/admin/users` (not on your own row). Human: redeploy, then look at `/publications` in light and dark; nobody has seen the cards in a browser
 - Lane B backlog closed out by Lane A (8:45 PM): T-016.2 `/publications`, T-016.4 `/admin/users` (*Make engineer*), T-015 two-user spec are merged to `lane-a`. Human before deploy: open `/publications` and `/admin/users` once as an admin and once as a member (never seen in a browser), then promote the deployed app's engineer account from `/admin/users`
 - Still open on Lane B rows: T-016.3 cron row + *Run now* (needs T-020's `docs-drift` task; `src/cron.ts` is empty); T-017 presence is CUT; `setRole` gives no feedback if the server refuses
 - Do NOT merge `t/T-012-signoff-ui` (gt-lane-b, 7 commits): superseded by `SignoffPanel` on lane-a. gt-lane-b also has uncommitted doc edits (TASKS, todo, sprint docs, VERIFICATION-LOG) that nobody has reconciled
