@@ -110,3 +110,120 @@ describe('retrieve', () => {
     await expect(retrieve({ search } as unknown as Kb, 'claim')).rejects.toBeInstanceOf(KnowledgeError)
   })
 })
+
+describe('retrieve empty-result keyword fallback', () => {
+  const OPTS = {
+    folder: CONFIG.kb.folder,
+    mode: CONFIG.kb.mode,
+    limit: CONFIG.limits.kbLimit,
+  }
+  const HIT = [chunk('h1', 'guides__background-jobs.md', 'jobs text'), chunk('h2', 'bindings__knowledge.md', 'kb text')]
+  const words = (q: string) => q.toLowerCase().split(/[^a-z0-9$.,]+/).filter(Boolean)
+
+  /** External boundary: knowledge search that answers call N with responses[N] (empty once exhausted). */
+  function seqKb(responses: KnowledgeSearchChunk[][]) {
+    let i = 0
+    const search = vi.fn(
+      async (_query: string, _options?: unknown): Promise<KnowledgeSearchResult> => ({
+        chunks: responses[i++] ?? [],
+      }),
+    )
+    return { kb: { search } as unknown as Kb, search }
+  }
+  const queries = (search: { mock: { calls: unknown[][] } }) => search.mock.calls.map((c) => String(c[0]))
+
+  it('[T-007] happy path: a non-empty first search makes exactly one call with the full claim text', async () => {
+    const claim = 'Background jobs retry three times by default.'
+    const { kb, search } = seqKb([HIT])
+    const out = await retrieve(kb, claim)
+    expect(search).toHaveBeenCalledTimes(1)
+    expect(search.mock.calls[0]?.[0]).toBe(claim)
+    expect(out.chunks).toHaveLength(2)
+  })
+
+  it('[T-007] zero first results triggers a shorter keyword query: stopwords removed, order kept', async () => {
+    const claim = 'Background jobs retry three times by default.'
+    const { kb, search } = seqKb([[], HIT])
+    await retrieve(kb, claim)
+    expect(search.mock.calls.length).toBeGreaterThanOrEqual(2)
+    const q = queries(search)[1] ?? ''
+    expect(q.length).toBeLessThan(claim.length)
+    for (const w of ['Background', 'jobs', 'retry', 'default']) expect(q).toContain(w)
+    expect(q).not.toContain(' by ')
+    expect(q.endsWith('.')).toBe(false)
+    expect(q.indexOf('Background')).toBeLessThan(q.indexOf('jobs'))
+    expect(q.indexOf('jobs')).toBeLessThan(q.indexOf('retry'))
+    expect(q.indexOf('retry')).toBeLessThan(q.indexOf('default'))
+
+    const claim2 = 'The limits of the platform are documented by the team.'
+    const second = seqKb([[], HIT])
+    await retrieve(second.kb, claim2)
+    const q2 = queries(second.search)[1] ?? ''
+    expect(q2.length).toBeLessThan(claim2.length)
+    for (const stop of ['the', 'by', 'of', 'are']) expect(words(q2)).not.toContain(stop)
+    for (const w of ['limits', 'platform', 'documented', 'team']) expect(q2).toContain(w)
+  })
+
+  it('[T-007] keyword query hits are mapped as usual and no further searches are made', async () => {
+    const { kb, search } = seqKb([[], HIT])
+    const out = await retrieve(kb, 'Background jobs retry three times by default.')
+    expect(search).toHaveBeenCalledTimes(2)
+    expect(out).toEqual({
+      chunks: [
+        { chunkId: 'c0', page: 'guides/background-jobs', text: 'jobs text' },
+        { chunkId: 'c1', page: 'bindings/knowledge', text: 'kb text' },
+      ],
+    })
+  })
+
+  it('[T-007] progressively shorter fallbacks: never longer, never empty or 1 char, <= 6 calls, stops at first hit', async () => {
+    const claim = 'The context window is limited to 32,000 tokens at $0.825 per million tokens by default.'
+    const empty = seqKb([])
+    await retrieve(empty.kb, claim)
+    const qs = queries(empty.search)
+    expect(qs.length).toBeGreaterThanOrEqual(3)
+    expect(qs.length).toBeLessThanOrEqual(6)
+    for (let i = 1; i < qs.length; i++) {
+      const q = qs[i] ?? ''
+      expect(q.trim().length).toBeGreaterThan(1)
+      expect(q.length).toBeLessThanOrEqual((qs[i - 1] ?? '').length)
+    }
+    // At some point numeric tokens are dropped.
+    expect(qs.slice(1).some((q) => !q.includes('32,000') && !q.includes('$0.825'))).toBe(true)
+
+    const stopAtThird = seqKb([[], [], HIT])
+    const out = await retrieve(stopAtThird.kb, claim)
+    expect(stopAtThird.search).toHaveBeenCalledTimes(3)
+    expect(out.chunks).toHaveLength(2)
+  })
+
+  it('[T-007] every attempt empty resolves to { chunks: [] } after at most 6 calls', async () => {
+    const { kb, search } = seqKb([])
+    await expect(retrieve(kb, 'Background jobs retry three times by default.')).resolves.toEqual({ chunks: [] })
+    expect(search.mock.calls.length).toBeGreaterThanOrEqual(2)
+    expect(search.mock.calls.length).toBeLessThanOrEqual(6)
+  })
+
+  it('[T-007] every fallback call reuses the first call options (folder, mode, limit)', async () => {
+    const { kb, search } = seqKb([])
+    await retrieve(kb, 'Background jobs retry three times by default.')
+    expect(search.mock.calls.length).toBeGreaterThanOrEqual(2)
+    for (const call of search.mock.calls) expect(call[1]).toEqual(OPTS)
+  })
+
+  it('[T-007] a first search with only unmappable chunks also triggers the fallback', async () => {
+    const junk = [chunk('x', undefined), chunk('y', 'stray-upload.txt')]
+    const { kb, search } = seqKb([junk, HIT])
+    const out = await retrieve(kb, 'Background jobs retry three times by default.')
+    expect(search).toHaveBeenCalledTimes(2)
+    expect(out.chunks.map((c) => c.chunkId)).toEqual(['c0', 'c1'])
+  })
+
+  it('[T-007] a KnowledgeError from the first search propagates and no fallback call is made', async () => {
+    const search = vi.fn(async () => {
+      throw new KnowledgeError(504, 'timeout', 'search timed out')
+    })
+    await expect(retrieve({ search } as unknown as Kb, 'Background jobs retry.')).rejects.toBeInstanceOf(KnowledgeError)
+    expect(search).toHaveBeenCalledTimes(1)
+  })
+})

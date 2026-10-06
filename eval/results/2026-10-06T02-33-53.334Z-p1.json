@@ -1,0 +1,410 @@
+{
+  "promptVersion": "p1",
+  "judgeModel": "claude-sonnet-5",
+  "file": "eval/golden-claims.jsonl",
+  "suite": null,
+  "modelCalls": 28,
+  "wallMs": 28950,
+  "summary": {
+    "counted": 28,
+    "accuracy": 0.8214285714285714,
+    "contradictedPrecision": 1,
+    "contradictedRecall": 0.6666666666666666,
+    "runErrors": 0,
+    "matrix": {
+      "supported": {
+        "supported": 13,
+        "contradicted": 0,
+        "unsupported": 2
+      },
+      "contradicted": {
+        "supported": 1,
+        "contradicted": 6,
+        "unsupported": 2
+      },
+      "unsupported": {
+        "supported": 0,
+        "contradicted": 0,
+        "unsupported": 4
+      }
+    }
+  },
+  "claims": [
+    {
+      "id": 1,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "concepts/architecture",
+        "get-started/introduction",
+        "index"
+      ],
+      "retrievedPages": [
+        "concepts/architecture",
+        "get-started/introduction",
+        "index",
+        "concepts/deployment"
+      ],
+      "reason": "Evidence explicitly states 'A DeepSpace app is a normal Cloudflare Worker' and 'DeepSpace is a full-stack SDK for shipping real-time apps on Cloudflare Workers,' confirming apps run on Cloudflare Workers.",
+      "diagnosis": null
+    },
+    {
+      "id": 2,
+      "gold": "contradicted",
+      "predicted": "contradicted",
+      "citedPages": [
+        "concepts/deployment",
+        "concepts/architecture",
+        "get-started/introduction"
+      ],
+      "retrievedPages": [
+        "sdk-reference/worker/ai",
+        "concepts/architecture",
+        "get-started/introduction",
+        "concepts/deployment"
+      ],
+      "reason": "Evidence states DeepSpace deploys apps to Cloudflare Workers for Platforms via `npx deepspace deploy`, not Vercel.",
+      "diagnosis": null
+    },
+    {
+      "id": 3,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "concepts/deployment"
+      ],
+      "retrievedPages": [
+        "concepts/deployment",
+        "concepts/architecture",
+        "index",
+        "get-started/quickstart",
+        "guides/secrets"
+      ],
+      "reason": "The evidence directly states that `npx deepspace deploy` builds the app and returns a live `<name>.app.space` URL.",
+      "diagnosis": null
+    },
+    {
+      "id": 4,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "guides/external-apis",
+        "get-started/introduction"
+      ],
+      "retrievedPages": [
+        "guides/external-apis",
+        "get-started/introduction"
+      ],
+      "reason": "Evidence states DeepSpace fronts 215+ third-party API endpoints through its integration proxy, matching the claim.",
+      "diagnosis": null
+    },
+    {
+      "id": 5,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "guides/external-apis"
+      ],
+      "retrievedPages": [
+        "guides/external-apis",
+        "get-started/introduction",
+        "concepts/architecture"
+      ],
+      "reason": "Evidence states you don't store API keys, configure webhooks, or build per-vendor SDKs when calling integrations through the proxy.",
+      "diagnosis": null
+    },
+    {
+      "id": 6,
+      "gold": "contradicted",
+      "predicted": "contradicted",
+      "citedPages": [
+        "guides/external-apis"
+      ],
+      "retrievedPages": [
+        "guides/external-apis"
+      ],
+      "reason": "The evidence states anonymous callers are 'Allowed' for developer-billed integrations and explicitly says 'The api-worker accepts anonymous callers for developer-billed integrations.' Only 'user'-billed integrations block anonymous callers with 401.",
+      "diagnosis": null
+    },
+    {
+      "id": 7,
+      "gold": "contradicted",
+      "predicted": "supported",
+      "citedPages": [
+        "guides/external-apis"
+      ],
+      "retrievedPages": [
+        "guides/external-apis"
+      ],
+      "reason": "Evidence states 'the platform handles billing, rate-limiting, and provider routing' for integration calls via integration.post, matching the claim.",
+      "diagnosis": "judge error"
+    },
+    {
+      "id": 8,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "guides/external-apis",
+        "guides/google-oauth"
+      ],
+      "retrievedPages": [
+        "guides/external-apis",
+        "guides/google-oauth"
+      ],
+      "reason": "Evidence states google/* endpoints require per-user OAuth and are always billed as 'user', matching the claim.",
+      "diagnosis": null
+    },
+    {
+      "id": 9,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "concepts/permissions"
+      ],
+      "retrievedPages": [
+        "concepts/permissions",
+        "guides/data-storage",
+        "concepts/realtime-sync",
+        "concepts/data-model"
+      ],
+      "reason": "Evidence explicitly states permissions are enforced server-side in the Durable Object, checked before data ships over the wire, and that unauthorized records are filtered out before the WebSocket broadcast.",
+      "diagnosis": null
+    },
+    {
+      "id": 10,
+      "gold": "contradicted",
+      "predicted": "contradicted",
+      "citedPages": [
+        "concepts/permissions"
+      ],
+      "retrievedPages": [
+        "concepts/permissions"
+      ],
+      "reason": "Evidence explicitly states unauthenticated callers use the '*' wildcard key, and there is no 'anonymous' role identifier.",
+      "diagnosis": null
+    },
+    {
+      "id": 11,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "concepts/permissions"
+      ],
+      "retrievedPages": [
+        "concepts/permissions"
+      ],
+      "reason": "The evidence states 'New authenticated users get member by default' matching the claim verbatim.",
+      "diagnosis": null
+    },
+    {
+      "id": 12,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "guides/background-jobs"
+      ],
+      "retrievedPages": [
+        "guides/background-jobs"
+      ],
+      "reason": "Evidence shows useJobs returns jobs, enqueue, cancel, and retry functions, allowing clients to watch, cancel, and retry jobs.",
+      "diagnosis": null
+    },
+    {
+      "id": 13,
+      "gold": "contradicted",
+      "predicted": "unsupported",
+      "citedPages": [],
+      "retrievedPages": [],
+      "reason": "No evidence was provided to verify the claim about background job retry behavior or default retry count.",
+      "diagnosis": "retrieval miss"
+    },
+    {
+      "id": 14,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "guides/background-jobs"
+      ],
+      "retrievedPages": [
+        "guides/background-jobs"
+      ],
+      "reason": "Evidence states the default alarm wall-time limit is 15 minutes, and adding a job type to backgroundJobTypes allows the handler to continue beyond that limit.",
+      "diagnosis": null
+    },
+    {
+      "id": 15,
+      "gold": "contradicted",
+      "predicted": "contradicted",
+      "citedPages": [
+        "guides/background-jobs"
+      ],
+      "retrievedPages": [
+        "guides/background-jobs",
+        "get-started/introduction"
+      ],
+      "reason": "Evidence explicitly says to use Background Jobs instead of ctx.waitUntil for long AI generations, since waitUntil is killed 30 seconds after the response.",
+      "diagnosis": null
+    },
+    {
+      "id": 16,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "bindings/knowledge"
+      ],
+      "retrievedPages": [
+        "bindings/knowledge"
+      ],
+      "reason": "Evidence states DeepSpace can provision one managed Cloudflare AI Search instance per app, and an app may declare only one ai_search binding.",
+      "diagnosis": null
+    },
+    {
+      "id": 17,
+      "gold": "contradicted",
+      "predicted": "unsupported",
+      "citedPages": [],
+      "retrievedPages": [],
+      "reason": "No evidence was provided to support or contradict the claim about a 32,000 character limit for knowledge search queries.",
+      "diagnosis": "retrieval miss"
+    },
+    {
+      "id": 18,
+      "gold": "supported",
+      "predicted": "unsupported",
+      "citedPages": [],
+      "retrievedPages": [],
+      "reason": "No evidence was provided to verify the claim about hybrid knowledge search pricing.",
+      "diagnosis": "retrieval miss"
+    },
+    {
+      "id": 19,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "guides/scheduled-jobs"
+      ],
+      "retrievedPages": [
+        "guides/scheduled-jobs"
+      ],
+      "reason": "Evidence states tasks can use 'schedule' + 'timezone' as a 5-field cron expression evaluated against an IANA timezone.",
+      "diagnosis": null
+    },
+    {
+      "id": 20,
+      "gold": "contradicted",
+      "predicted": "contradicted",
+      "citedPages": [
+        "guides/scheduled-jobs"
+      ],
+      "retrievedPages": [
+        "guides/scheduled-jobs"
+      ],
+      "reason": "Evidence states members AND admins can fire owner-billed tasks by default, not only admins. Admin-only requires customizing the role resolver.",
+      "diagnosis": null
+    },
+    {
+      "id": 21,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "sdk-reference/worker/ai"
+      ],
+      "retrievedPages": [
+        "guides/scheduled-jobs",
+        "sdk-reference/worker/ai",
+        "bindings/knowledge",
+        "get-started/introduction"
+      ],
+      "reason": "The evidence states that when authToken is omitted from createDeepSpaceAI, it falls back to env.APP_OWNER_JWT, meaning the owner pays/is billed.",
+      "diagnosis": null
+    },
+    {
+      "id": 22,
+      "gold": "contradicted",
+      "predicted": "contradicted",
+      "citedPages": [
+        "sdk-reference/worker/ai"
+      ],
+      "retrievedPages": [
+        "sdk-reference/worker/ai"
+      ],
+      "reason": "Evidence states the default for Anthropic models created by createDeepSpaceAI is 64,000 output tokens, not 4,096.",
+      "diagnosis": null
+    },
+    {
+      "id": 23,
+      "gold": "supported",
+      "predicted": "unsupported",
+      "citedPages": [],
+      "retrievedPages": [],
+      "reason": "No evidence was provided to verify the claim about a uniqueOn constraint enforcing one vote per user per poll.",
+      "diagnosis": "retrieval miss"
+    },
+    {
+      "id": 24,
+      "gold": "unsupported",
+      "predicted": "unsupported",
+      "citedPages": [
+        "get-started/introduction"
+      ],
+      "retrievedPages": [
+        "get-started/introduction"
+      ],
+      "reason": "The evidence describes DeepSpace's features and architecture (Cloudflare Workers, Durable Objects, real-time sync) but makes no claim about scaling to millions of concurrent users or any specific scale guarantee.",
+      "diagnosis": null
+    },
+    {
+      "id": 25,
+      "gold": "unsupported",
+      "predicted": "unsupported",
+      "citedPages": [],
+      "retrievedPages": [],
+      "reason": "The evidence provided is empty and contains no information about DeepSpace's uptime SLA or any service level agreement details.",
+      "diagnosis": null
+    },
+    {
+      "id": 26,
+      "gold": "unsupported",
+      "predicted": "unsupported",
+      "citedPages": [
+        "get-started/introduction",
+        "index"
+      ],
+      "retrievedPages": [
+        "get-started/introduction",
+        "index"
+      ],
+      "reason": "The evidence describes DeepSpace's features and architecture but makes no cost or pricing comparison to Firebase whatsoever.",
+      "diagnosis": null
+    },
+    {
+      "id": 27,
+      "gold": "unsupported",
+      "predicted": "unsupported",
+      "citedPages": [
+        "get-started/introduction"
+      ],
+      "retrievedPages": [
+        "get-started/introduction"
+      ],
+      "reason": "Evidence only states that apps deploy to Cloudflare's global network so requests terminate close to the user; it does not mention a specific number of edge locations like 300+.",
+      "diagnosis": null
+    },
+    {
+      "id": 28,
+      "gold": "supported",
+      "predicted": "supported",
+      "citedPages": [
+        "get-started/introduction",
+        "guides/payments"
+      ],
+      "retrievedPages": [
+        "get-started/introduction",
+        "guides/payments",
+        "concepts/architecture"
+      ],
+      "reason": "Evidence states DeepSpace ships a Stripe-backed payment system supporting subscriptions and one-time products/charges, matching the claim.",
+      "diagnosis": null
+    }
+  ]
+}
