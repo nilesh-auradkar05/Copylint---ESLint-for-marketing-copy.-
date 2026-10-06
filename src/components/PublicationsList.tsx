@@ -1,5 +1,5 @@
 export type PublicationRow = {
-  id: string; draftId: string; versionId: string; url: string; kbVersionAtPublish: string
+  id: string; draftId: string; versionId: string; url: string; kbVersionAtPublish: number
   status: 'live' | 'stale'; stalePages?: string[]; staleSince?: string
 }
 
@@ -21,7 +21,7 @@ export function PublicationsList({ publications, drafts, ready }: {
         {isWebUrl(p.url)
           ? <a className="proof-link" href={p.url} target="_blank" rel="noopener noreferrer">{p.url}</a>
           : <span className="proof-muted">{p.url}</span>}
-        {p.status === 'stale' && p.stalePages && p.stalePages.length > 0 &&
+        {p.status === 'stale' && Array.isArray(p.stalePages) && p.stalePages.length > 0 &&
           <ul aria-label="Changed docs pages">{p.stalePages.map(page => <li key={page}>{page}</li>)}</ul>}
       </div>
     </li>
