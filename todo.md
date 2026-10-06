@@ -4,8 +4,8 @@ Short-horizon checklist for the human and both orchestrators. `TASKS.md` is the 
 Update at the start and end of every session. Keep it under one screen.
 
 ## Now
-- [ ] Human, BEFORE SUBMITTING: deploy `main` after fast-forwarding to `lane-a`. It carries the T-023 fix: until it is live, anyone signed out can call owner-billed integrations through `/api/integrations/<name>/<endpoint>` on the owner's bill
-- [ ] Human, after that deploy: (1) `curl -s -X POST -d '{}' https://copylint.app.space/api/integrations/anthropic/x` must answer `{"error":"not_found"}`; (2) run one real check on a draft to confirm the job still works
+- [x] (done, release #17) Human, BEFORE SUBMITTING: deploy `main` after fast-forwarding to `lane-a`. It carries the T-023 fix: until it is live, anyone signed out can call owner-billed integrations through `/api/integrations/<name>/<endpoint>` on the owner's bill
+- [x] (both pass) Human, after that deploy: (1) `curl -s -X POST -d '{}' https://copylint.app.space/api/integrations/anthropic/x` must answer `{"error":"not_found"}`; (2) run one real check on a draft to confirm the job still works
 - [ ] Human: `SUBMISSION.md` is still mostly the template: wrong live URL (says groundtruth.app.space, app is copylint.app.space), placeholder repo and accounts, and the "What I built" paragraph says a daily job flags stale posts, which is not shipped (T-020 not started)
 - [x] (done 9:02 PM, main = lane-a = b0f5ce9, release #16) Human: fast-forward `main` to `lane-a` and push (`git -C ../copylint merge --ff-only lane-a && git -C ../copylint push`)
 - [x] Human: first `npx deepspace deploy` from the primary checkout (T-001), done Oct 5. Unblocks the knowledge binding and every live check below
