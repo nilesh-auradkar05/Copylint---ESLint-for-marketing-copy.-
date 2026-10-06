@@ -85,9 +85,19 @@ class FakeKb {
   queries: string[] = []
   /** Return no chunks for queries matching this. */
   empty: RegExp | null = null
+  /**
+   * Words of every query that matched `empty`. Retrieval may retry a silent claim with shorter keyword
+   * queries that no longer contain the matching word, so a query made only of known-silent words is
+   * also empty. Order-independent and safe under concurrent claims.
+   */
+  private silent = new Set<string>()
+  private static words = (q: string) => q.toLowerCase().match(/[a-z0-9]+/g) ?? []
   search = (async (query: string) => {
     this.queries.push(query)
-    return { chunks: this.empty?.test(query) ? [] : CHUNKS }
+    const words = FakeKb.words(query)
+    if (this.empty?.test(query)) for (const w of words) this.silent.add(w)
+    const isEmpty = this.empty !== null && words.length > 0 && words.every((w) => this.silent.has(w))
+    return { chunks: isEmpty ? [] : CHUNKS }
   }) as unknown as VerifyDeps['kb']['search']
 }
 
